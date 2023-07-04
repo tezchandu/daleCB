@@ -1,0 +1,101 @@
+<template>
+    <label class="slds-form-element__label">
+        <template if:true={isAttributeRequired}>
+            <abbr title="required">*</abbr>
+        </template>
+        <span class="">Session Number is changing</span>
+    </label>
+    
+    <lightning-combobox
+        
+        placeholder="Select any session number"
+        options={fieldsInfo}
+        value={selectedSessionNumber}
+        onchange={selectionChangeHandler}
+        class={computedClass}
+    ></lightning-combobox>
+    <p class="error-message" if:true={isFutureDateSelected}>
+        Please select a session number with a past or current date.
+    </p>
+   <!---<div class="slds-form-element__control">
+            <div class="slds-select_container">
+                <select class="slds-select" 
+                        onchange={selectionChangeHandler} 
+                        
+                        required={isAttributeRequired}>
+                    <option value="selectedSessionNumber ">Select Session Number</option>
+                    <template for:each={fieldsInfo} for:item="option">
+                        <option key={option.label} class="uiInputSelectOption" value={option.value}>{option.value}</option>
+                    </template>
+                </select>
+            </div>
+        </div>-->
+        
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
+        <thead>
+          
+          <tr class="slds-line-height_reset">
+            <th>Session Date</th>
+          </tr>
+          <td>
+            {selectedSessionDate}
+          </td>
+        </thead>
+        <template if:true={selectedSessionNumber}>
+        <template if:true={registrationRecords}>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Attended Part A</th>
+                        <th>Attended Part B</th>
+                        <th>Award Part A</th>
+                        <th>Award Part B</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={registrationRecords} for:item="registration">
+                        <tr key={registration.Id}>
+                            <td>{registration.ContactName}
+                                
+                            </td>
+                            <td>
+                                <lightning-input type="text" value='yes' data-id="attendedPartA" onchange={handleAward}></lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input type="text" value='yes' data-id="attendedPartB" onchange={handleAward}></lightning-input>
+                            </td>
+                            <td>
+                                <c-lookup-Input 
+                                 label="Award Part A" selected-icon-name="standard:account" object-label="Award__c"
+                                 object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
+                                 onvalueselected={handleSelectionChange}>
+                                </c-lookup-Input>
+                            </td>
+                            <td>
+                                <c-lookup-Input 
+                                 label="Award Part B" selected-icon-name="standard:account" object-label="Award__c"
+                                 object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
+                                 onvalueselected={handleSelectionChange}>
+                                </c-lookup-Input>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
+    </template>
+      </table>
+      <template if:true={errorMessage}>
+        <div class="error-message">{errorMessage}</div>
+
+    </template>
+    <br/><br/>
+        <lightning-button-group>
+            <div>
+            <lightning-button variant="brand-outline" label="Save" title="Save" onclick={handleClickSave} class="slds-m-left_x-small"></lightning-button> 
+            <lightning-button variant="brand-outline" label="Cancel" title="Cancel" onclick={handleClickCancel} class="slds-m-left_x-small"></lightning-button>
+            </div>
+        </lightning-button-group>
+   
+</template>
