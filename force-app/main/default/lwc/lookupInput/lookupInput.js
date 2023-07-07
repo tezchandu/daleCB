@@ -7,7 +7,7 @@ export default class LookupInput extends LightningElement {
     @api label = "Award";
     @api required;
     @api selectedIconName = "standard:account";
-    @api objectLabel = "Award_-c";
+    @api objectLabel = "Award__c";
     recordsList = [];
     selectedRecordName;
 
@@ -18,6 +18,7 @@ export default class LookupInput extends LightningElement {
     @api selectedRecordId = "";
     @api parentRecordId;
     @api parentFieldApiName;
+    @api recordid ;
 
     preventClosingOfSerachPanel = false;
 
@@ -29,7 +30,7 @@ export default class LookupInput extends LightningElement {
             searchString: this.searchString,
             selectedRecordId: this.selectedRecordId,
             parentRecordId: this.parentRecordId,
-            parentFieldApiName: this.parentFieldApiName
+            parentFieldApiName: this.parentFieldApiName,
         };
     }
 
@@ -45,7 +46,12 @@ export default class LookupInput extends LightningElement {
         if (this.selectedRecordId) {
             this.fetchSobjectRecords(true);
         }
+       // this.addEventListener('clearfield', this.clearField);
     }
+    disconnectedCallback() {
+        // Remove the event listener when the component is removed from the DOM
+       // this.removeEventListener('clearfield', this.clearField);
+    } 
 
     //call the apex method
     fetchSobjectRecords(loadEvent) {
@@ -85,10 +91,17 @@ export default class LookupInput extends LightningElement {
         this.preventClosingOfSerachPanel = true;
     }
 
+    clearField(){
+        this.selectedRecordName = "";
+        this.selectedRecordId = "";
+        
+    }
+
     //handler for deselection of the selected item
     handleCommit() {
         this.selectedRecordId = "";
         this.selectedRecordName = "";
+        
     }
 
     //handler for selection of records from lookup result list

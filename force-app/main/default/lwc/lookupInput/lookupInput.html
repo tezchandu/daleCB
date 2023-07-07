@@ -30,7 +30,8 @@
                                 aria-labelledby="combobox-label-id-34 combobox-id-5-selected-value"
                                 id="combobox-id-5-selected-value" aria-controls="listbox-id-5" aria-expanded="false"
                                 aria-haspopup="listbox">
-                                <span class="slds-truncate" id="combobox-value-id-19">{selectedRecordName}</span>
+
+                                <span class="slds-truncate" id="combobox-value-id-19" data-id = "name">{selectedRecordName}</span>
                             </button>
                             <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
                                 title="Remove selected option" onclick={handleCommit}>
@@ -41,6 +42,7 @@
                     </div>
                 </div>
             </template>
+      
             <template if:true={showRecentRecords}>
                 <div id="listbox-id-4" tabindex="0" onblur={handleBlur} onmousedown={handleDivClick}
                     class="slds-dropdown slds-dropdown_length-with-icon-7 slds-dropdown_fluid" role="listbox">

@@ -7,3 +7,23 @@
     font-size: 14px;
     margin-top: 4px;
 }
+.successMessageContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(#04844b);
+    padding: 1rem;
+    border-radius: 4px;
+  }
+  
+  .successMessage {
+    color: rgb(12, 11, 11);
+    font-weight: bold;
+  }
+  
+  .greenButton {
+    background-color: rgb(10, 50, 10);
+  }
+  
+  
