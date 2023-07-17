@@ -7,9 +7,10 @@ export default class LookupInput extends LightningElement {
     @api label = "Award";
     @api required;
     @api selectedIconName = "standard:account";
-    @api objectLabel = "Award__c";
+    @api objectLabel ;
     recordsList = [];
     selectedRecordName;
+    @api disabled;
 
     @api objectApiName = "Award__c";
     @api fieldApiName = "Name";
@@ -95,6 +96,18 @@ export default class LookupInput extends LightningElement {
         this.selectedRecordName = "";
         this.selectedRecordId = "";
         
+    }
+    disableLookup(value) {
+        this.disabled = value;
+        const inputElement = this.template.querySelector('input');
+    if (inputElement) {
+        inputElement.disabled = value;
+        if (value) {
+            inputElement.classList.add('disabled-input');
+        } else {
+            inputElement.classList.remove('disabled-input');
+        }
+    }
     }
 
     //handler for deselection of the selected item
