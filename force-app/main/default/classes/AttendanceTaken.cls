@@ -70,7 +70,18 @@ public with sharing class AttendanceTaken {
             throw new AuraHandledException(err.getMessage());
         }
     }
-    
+    @AuraEnabled(cacheable=true)
+    public static List<Registration__c> getRegistrationsByProgramId(String programId){
+        List<Registration__c> regs = new List<Registration__c>();
+        try {
+
+            regs = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c FROM Registration__c WHERE ProgramCode__c = :programId  WITH SECURITY_ENFORCED];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+
+        return regs;
+    }
     @AuraEnabled
     public static void insertAttendanceRec(String wrapParams, string sessionId, string prgmID, string sessName){
         system.debug('myListJSON -- ' +wrapParams);
@@ -103,15 +114,22 @@ public with sharing class AttendanceTaken {
             }
             if(attLists.size()>0) {
                 system.debug('full - '+attLists);
-                Database.SaveResult[] results = Database.update(attLists, false);
+                Database.SaveResult[] results = Database.insert(attLists, false);
                 for (Database.SaveResult result : results) {
-                    if (!result.isSuccess()) {
+                    if (result.isSuccess()) {
                         Session__c s = new Session__c();
                         s.id= sessionId;
                         s.AttendanceTaken__c = true;
+                        
                         update s;
+                        System.debug('The session is updated. ' +s.id);
                     }else{
-                        system.debug('error');
+                        for(Database.Error err : result.getErrors()) {
+                                System.debug('The following error has occurred.');                    
+                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                                System.debug('Attendance fields that affected this error: ' + err.getFields());
+        }
+                       
                     }
                 }
                 
@@ -149,10 +167,19 @@ public with sharing class AttendanceTaken {
         if (!attLists.isEmpty()) {
             Database.SaveResult[] results = Database.update(attLists, false);
             for (Database.SaveResult result : results) {
-                if (!result.isSuccess()) {
-                    // Handle the error if necessary
-                }else{
-                    system.debug('error');
+                if (result.isSuccess()) {
+                   Session__c s = new Session__c();
+                        s.id= sessionId;
+                        s.AttendanceTaken__c = true;
+                        update s;
+                        System.debug('The session is updated. ' +s.id);
+                    }else{
+                        for(Database.Error err : result.getErrors()) {
+                                System.debug('The following error has occurred while updte.');                    
+                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                                System.debug('Attendance fields that affected this error: ' + err.getFields());
+        }
+                        
                 }
             }
         }

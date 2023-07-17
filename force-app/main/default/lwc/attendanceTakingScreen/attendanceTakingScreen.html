@@ -1,14 +1,12 @@
 <template>
-    <label class="slds-form-element__label">
-        <template if:true={isAttributeRequired}>
-            <abbr title="required">*</abbr>
-        </template>
-        <span class="">Session Number</span>
-    </label>
+    <div>
+        <h2 class="bold-and-double-bigger">Attendance Screen</h2>
+        <div>
+    
     
     <lightning-combobox
-        
-        placeholder="Select any session number"
+        class="slds-p-around_medium" label = "  Session Number"
+         placeholder="Select any session number"
         options={fieldsInfo}
         value={selectedSessionNumber}
         onchange={selectionChangeHandler}
@@ -16,7 +14,8 @@
     <p class="error-message" if:true={isFutureDateSelected}>
         Please select a session number with a past or current date...
     </p>
-        
+</div>
+<br/>
     <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
         <thead>
           
@@ -69,14 +68,14 @@
                             </td>
                             <td>
                                 <c-lookup-Input name={registration.Id} data-id="awardPartA" data-contactname={registration.ContactName}
-                                 label="Award Part A" selected-icon-name="standard:account" object-label="Award__c"
+                                 label="Award Part A" selected-icon-name="standard:account" 
                                  object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
                                  onvalueselected={handleAttendance} >
                                 </c-lookup-Input>
                             </td>
                             <td>
                                 <c-lookup-Input name={registration.Id} data-contactname={registration.ContactName}
-                                 label="Award Part B" selected-icon-name="standard:account" object-label="Award__c"
+                                 label="Award Part B" selected-icon-name="standard:account" object-label=""
                                  object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
                                  onvalueselected={handleAttendance} data-id="awardPartB">
                                 </c-lookup-Input>
@@ -105,4 +104,5 @@
               </div>
             
           </template>
+          </div>
 </template>

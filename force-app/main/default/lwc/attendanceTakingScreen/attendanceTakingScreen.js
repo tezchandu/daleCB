@@ -3,8 +3,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import insertAttendanceRec from '@salesforce/apex/AttendanceTaken.insertAttendanceRec';
 import getSessionNumberPicklistValues from '@salesforce/apex/AttendanceTaken.getSessionNumberPicklistValues';
-import getRegistrationsByProgramId from '@salesforce/apex/RegistrationFecthforAttendance.getRegistrationsByProgramId';
-
+import getRegistrationsByProgramId from '@salesforce/apex/AttendanceTaken.getRegistrationsByProgramId'
 export default class attendanceTakingScreen extends LightningElement {
     @api recordId;
     @track selectedSessionNumber;
@@ -64,6 +63,7 @@ export default class attendanceTakingScreen extends LightningElement {
     }
     fetchRegistrationRecords() {
         getRegistrationsByProgramId({ programId: this.recordId })
+        
         .then(result => {
             this.registrationRecords = result.map(reg => ({
              Id: reg.Id,
@@ -147,6 +147,7 @@ export default class attendanceTakingScreen extends LightningElement {
         console.log('event.detail - '+JSON.stringify(event.detail));
         console.log('award - ' +updatedAwardValue.id);
         console.log('prgmID - ' +prgmID);
+        console.log('contactName - ' +contactName);
         console.log('sessionName  - ' +sessionName +' - '+sessionId);
         // Find the existing entry in updatedValues for the current registration ID
         let existingEntry = this.updatedValues.find(entry => entry.registrationId === registrationId);
