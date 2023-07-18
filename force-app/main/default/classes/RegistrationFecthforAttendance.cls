@@ -37,9 +37,12 @@ public class RegistrationFecthforAttendance {
                         }
             }
         }
-        system.debug(regs);
-            for (Registration__c rg : regs) {
-                options.add(new RegWrapper(rg.Name, rg.ProgramCode__c,rg.id,rg.ContactName__r.Name));
+        List<Registration__c> regs2Update = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c,
+        								ProgramCode__r.MinimumSessions__c ,Completed_Sessions_Count__c,ProgramCode__r.Fee_payments_count__c
+                                      FROM Registration__c WHERE ProgramCode__c = :programId AND ExitType__c=null  ];
+        system.debug(regs2Update);
+            for (Registration__c rg : regs2Update) {
+                options.add(new RegWrapper(rg.Name, rg.ProgramCode__c,rg.id,rg.ContactName__r.Name,rg.ProgramCode__r.Fee_payments_count__c));
             }
     system.debug(options);
     return options;
@@ -75,11 +78,14 @@ public class RegistrationFecthforAttendance {
     }
     @AuraEnabled
     public static boolean handleProduct(String registrationId, string prgmID){
-        Registration__c reg = [select id,BalanceDue__c,programcode__c,ProgramCode__r.Product__c from Registration__c where id=:registrationId limit 1];
-                    Program__c prg = [select id,Product__c, Name from Program__c where id =: prgmID limit 1 ];
+        Registration__c reg = [select id,BalanceDue__c,programcode__c,ProgramCode__r.Product__c,ProgramCode__r.TotalSessions__c,ProgramCode__r.Product_Type__c from Registration__c where id=:registrationId limit 1];
+        Program__c prg = [select id,Product__c,Product_Type__c,TotalSessions__c, Name from Program__c where id =: prgmID limit 1 ];
         system.debug(reg.ProgramCode__r.Product__c);
         system.debug(prg.Product__c);
-                    if(reg.ProgramCode__r.Product__c == prg.Product__c){
+                    if(((reg.ProgramCode__r.Product__c == prg.Product__c )|| ((prg.Product_Type__c=='Tailored') && (prg.TotalSessions__c==reg.ProgramCode__r.TotalSessions__c)))){
+                        system.debug(prg.Product_Type__c);
+                        system.debug(prg.TotalSessions__c);
+                        system.debug(reg.ProgramCode__r.TotalSessions__c);
                         return true;
                     }else{
                         return false;
@@ -106,7 +112,8 @@ public class RegistrationFecthforAttendance {
                      Registration__c rg = new Registration__c();
                     rg.programcode__c = wrap.programCode;
                     rg.AccountName__c = reg.AccountName__c;
-                    rg.PaymentDate__c = system.today();
+                   
+                    rg.RegistrationDate__c = system.today();
                     rg.BaseRegistrationFee__c = reg.BaseRegistrationFee__c;
                     //rg.Tax__c = reg.Tax__c;
                     rg.ContactName__c = reg.ContactName__c;
@@ -280,12 +287,15 @@ public class RegistrationFecthforAttendance {
         @AuraEnabled public String programCode;
         @AuraEnabled public String Id;
         @AuraEnabled public String contactName;
+        @AuraEnabled public Decimal feePaymentCount;
         
-        public RegWrapper(String name, String programCode, String Id, String contactName) {
+        
+        public RegWrapper(String name, String programCode, String Id, String contactName ,Decimal feePaymentCount) {
             this.name = name;
             this.programCode = programCode;
             this.Id = Id;
             this.contactName = contactName;
+            this.feePaymentCount = feePaymentCount;
         }
     }
     public class createAttendancenPayments {

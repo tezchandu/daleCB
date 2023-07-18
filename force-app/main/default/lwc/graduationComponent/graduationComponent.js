@@ -20,6 +20,7 @@ export default class GraduationComponent extends LightningElement {
         { label: 'No', value: 'No' }
     ];
     isFieldDisabled =false;
+    errorMessages ={};
     updatedValues = [];
     disableProdAttendance =false;
     disableTransferAttendance = false;
@@ -50,6 +51,7 @@ export default class GraduationComponent extends LightningElement {
              Id: reg.Id,
              ContactName: reg.contactName, // Map ContactName__r.Name field
              isDisabled :false,
+             feePaymentCount : reg.feePaymentCount,
              attendanceTaken :''
         }));
             console.log('registrationRecords'  +this.registrationRecords);
@@ -72,12 +74,23 @@ export default class GraduationComponent extends LightningElement {
         console.log('tem - '+programCodeInput1.disabled);
         console.log('tem - '+programCodeInput1.value);
         
+
+        
         this.registrationRecords = this.registrationRecords.map(registration => {
             if (registration.Id === registrationId) {
+                console.log('tem - '+registration.feePaymentCount);
                 registration.isdisabledattendance = exitTypeValue !== 'Transfer';
-                registration.isDisabledTransPay = exitTypeValue !== 'Transfer';
+                
+                if(registration.feePaymentCount<0 || exitTypeValue !== 'Transfer'){
+                    registration.isDisabledTransPay = true;
+                }
                 registration.isDisabledProgramCode = exitTypeValue !== 'Transfer';
-                registration.isDisabledRefPay = exitTypeValue === 'Transfer';
+                if(registration.feePaymentCount<0 || exitTypeValue === 'Transfer'){
+                    registration.isDisabledRefPay = true;
+                }
+                if(registration.feePaymentCount>0){
+                    registration.isDisabledNoPay = true;
+                }
                 registration.attendanceTaken=exitTypeValue;
             }
             return registration;
@@ -135,15 +148,34 @@ export default class GraduationComponent extends LightningElement {
                 .then(result => {
                     console.log('Handle Product Result:' +result);
                     if(!result){
+                        //const exitType = event.target.getAttribute('data-value');
                         this.disableTransferAttendance = exitType !== 'Transfer' || !result;
+                        console.log(result +' - '+exitType);
                         console.log('this.disableTransferAttendance in result- '+this.disableTransferAttendance);
                         console.log('this.disableTransferAttendance - '+this.disableTransferAttendance);
                         this.registrationRecords = this.registrationRecords.map(registration => {
                         console.log(registration.Id);
-                        if (registration.Id === registrationId && exitType === 'Transfer') {
+                        if (registration.Id === registrationId && (exitType === 'Transfer' || exitType==null)) {
                             registration.isdisabledattendance = this.disableTransferAttendance ;
                                 this.disableTransferAttendance = registration.isdisabledattendance;
+                                this.errorMessages[registration.Id] = 'Please select a program with the same product.';
                                 console.log('registration.isdisabledattendance - '+registration.isdisabledattendance);
+                        }
+                        return registration;
+                        });
+                        //registration.isdisabledattendance=false;
+                    }
+                    else if(result){
+                        //const exitType = event.target.getAttribute('data-value');
+                        
+                        this.disableTransferAttendance = exitType !== 'Transfer' || !result;
+                        console.log(result +' - '+exitType);
+                        this.registrationRecords = this.registrationRecords.map(registration => {
+                            console.log(registration.Id);
+                        if (registration.Id === registrationId && (exitType === 'Transfer' || exitType==null)) {
+                            registration.isdisabledattendance = false ;
+                                this.disableTransferAttendance = registration.isdisabledattendance;
+                                console.log('registration.isdisabledattendance else- '+registration.isdisabledattendance);
                         }
                         return registration;
                         });
@@ -165,6 +197,17 @@ export default class GraduationComponent extends LightningElement {
                 .catch(error => {
                     console.log('Error in handleProduct:', error);
                 });
+        }
+        else if(gotPrgmVal.id==null) {
+                        this.registrationRecords = this.registrationRecords.map(registration => {
+                                console.log(registration.Id);
+                        if (registration.Id === registrationId && exitType !== 'Transfer') {
+                                registration.isdisabledattendance = false ;
+                                    this.disableTransferAttendance = registration.isdisabledattendance;
+                                    console.log('registration.isdisabledattendance else- '+registration.isdisabledattendance);
+                        }
+                            return registration;
+                        });
         }
                 //console.log('registration.isdisabledattendance - '+registration.isdisabledattendance);
                 console.log('this.disableTransferAttendance -last '+this.disableTransferAttendance);
@@ -306,7 +349,7 @@ export default class GraduationComponent extends LightningElement {
                         this.showSuccessMessage = false;
                       }, 5000);
                       this.dispatchEvent(new CloseActionScreenEvent());*/
-                      window.alert(' Successfully Graduated.');
+                      window.alert(' Successfully Updated.');
                       window.location.href = 'https://dalecarnegie--cbdev.sandbox.lightning.force.com/lightning/r/Program__c/'+this.recordId+'/view';
                     //this.navigateToRecord(result.id);    
         
