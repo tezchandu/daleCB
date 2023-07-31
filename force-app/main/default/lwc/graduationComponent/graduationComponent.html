@@ -1,6 +1,7 @@
 <template>
     <div class="container">
-        
+        <h2 class="bold-and-double-bigger">Graduation Screen</h2>
+        <br/>
     <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
       
         <template if:true={registrationRecords}>
@@ -44,8 +45,6 @@
                             
                             </td>
                             <td>
-                                {registration.isdisabledattendance} - {disableTransferAttendance}
-                                
                                 
                                 <template if:true={registration.isdisabledattendance}>
                                     <lightning-combobox
@@ -59,10 +58,10 @@
                                         onchange={handleAttendance}
                                     ></lightning-combobox>
                                 </template>
-                                {registration.isdisabledattendance} - {disableTransferAttendance}
+                                
                                
                                 <template if:false={registration.isdisabledattendance}>
-                                    {registration.isdisabledattendance} - {disableTransferAttendance}
+                                    
                                     <template if:true={disableTransferAttendance}>
                                     <lightning-combobox
                                     name={registration.Id}
@@ -85,6 +84,7 @@
                                     options={attendanceValues}
                                     data-id="atttendance"
                                     onchange={handleAttendance}
+                                    
                                    ></lightning-combobox>
                                 </template>
                                 </template>
@@ -102,6 +102,7 @@
                                     disabled={registration.isDisabledNoPay}
                                     options={attendanceValues}
                                     data-id="noPayment"
+                                    data-paycount ={registration.feePaymentCount}
                                     onchange={handleAttendance}
                                 ></lightning-combobox>
                                 </div>
@@ -128,6 +129,7 @@
                                     disabled={registration.isDisabledRefPay}
                                     options={attendanceValues}
                                     data-id="refPay"
+                                    data-paycount ={registration.feePaymentCount}
                                     onchange={handleAttendance}
                                 ></lightning-combobox>
                             </td>

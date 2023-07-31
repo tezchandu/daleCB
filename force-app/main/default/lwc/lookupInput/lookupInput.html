@@ -5,7 +5,7 @@
                 <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click slds-is-open">
                     <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
                         <lightning-input onchange={handleChange} type="search" autocomplete="off" 
-                            required={required} field-level-help={helpText}  disabled={disabled}
+                            required={required} field-level-help={helpText}  disabled={disabled} value={valSelected}
                             onblur={handleInputBlur}></lightning-input>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                                             </span>
                                         </span>
                                         <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">
-                                            {objectLabel} • {rec.subField}
+                                            {objectLabel} • {rec.subField} >9
                                         </span>
                                     </span>
                                 </div>
