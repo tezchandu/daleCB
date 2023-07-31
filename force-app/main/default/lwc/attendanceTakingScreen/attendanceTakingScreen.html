@@ -31,6 +31,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Name</th>
                         <th>Attended Part A</th>
                         <th>Attended Part B</th>
@@ -39,47 +40,65 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template for:each={registrationRecords} for:item="registration">
+                    <template for:each={registrationRecordsWithAttendance} for:item="registration">
                         <tr key={registration.Id}>
                             <td>
-                                {registration.ContactName}
+                            <template if:false={registration.hideEditButton}>
+                            <lightning-button variant="brand-outline" label="Edit" data-id={registration.Id} onclick={handleEditRow} disabled={registration.hideEditButton} >
+                                Edit
+                            </lightning-button>
+                            </template>
+                            
+                            </td>
+                            
+                            <td>
+                                 {registration.ContactName}
+                                 
                             </td>
                             <td>
                                 <lightning-combobox
                                     name={registration.Id}
                                     data-contactname={registration.ContactName}
-                                    value={attendedVal}
+                                    data-value={attendedVal}
+                                    value={registration.atPartA}
                                     options={attendedVals}
                                     data-id="attendedPartA"
                                     onchange={handleAttendance}
+                                    disabled={registration.editMode}
                                 ></lightning-combobox>
                                 <!--<lightning-input name={registration.Id} type="text" value='yes' data-id="attendedPartA" onchange={handleAward}></lightning-input>-->
                             </td>
                             <td>
+                                
                                 <lightning-combobox
+                                
                                     name={registration.Id}
                                     data-contactname={registration.ContactName}
-                                    value={attendedVal}
+                                    data-value={attendedVal}
+                                    value={registration.atPartB}
                                     options={attendedVals}
                                     data-id="attendedPartB"
                                     onchange={handleAttendance}
+                                    disabled={registration.editMode}
                                 ></lightning-combobox>
                                 
                             </td>
                             <td>
+                                
                                 <c-lookup-Input name={registration.Id} data-id="awardPartA" data-contactname={registration.ContactName}
-                                 label="Award Part A" selected-icon-name="standard:account" 
+                                 label="Award Part A" selected-icon-name="custom:custom48" 
                                  object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
-                                 onvalueselected={handleAttendance} >
+                                 onvalueselected={handleAttendance} selected-record-id={registration.awPartA} disabled={registration.editMode}>
                                 </c-lookup-Input>
                             </td>
                             <td>
                                 <c-lookup-Input name={registration.Id} data-contactname={registration.ContactName}
-                                 label="Award Part B" selected-icon-name="standard:account" object-label=""
+                                 label="Award Part B" selected-icon-name="custom:custom48" object-label=""
                                  object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
-                                 onvalueselected={handleAttendance} data-id="awardPartB">
+                                 onvalueselected={handleAttendance} data-id="awardPartB" selected-record-id={registration.awPartB} disabled={registration.editMode}>
                                 </c-lookup-Input>
                             </td>
+                            
                         </tr>
                     </template>
                 </tbody>

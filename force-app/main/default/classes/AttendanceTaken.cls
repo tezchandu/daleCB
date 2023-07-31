@@ -6,7 +6,9 @@ public with sharing class AttendanceTaken {
         List<String> picklistValues = new List<String>();
         List<SessionWrapper> options = new List<SessionWrapper>();
         List<Session__c> sessRecs = [select id, Name,SessionNumber__c, AttendanceTaken__c, SessionDate__c,
-                                     Program__c from session__c where Program__c = :id WITH SECURITY_ENFORCED];
+                                     Program__c from session__c where Program__c = :id ];
+        List<Attendance__c> attnds = [select id,Registration__c,Program__c,  Session__c, AttendedPartA__c, 
+                                     AttendedPartB__c, AwardPartA__c, AwardPartB__c from Attendance__c where Program__c = :id  ];
         for(Session__c sess : sessRecs){
             picklistValues.add(sess.SessionNumber__c);
         }
@@ -79,9 +81,62 @@ public with sharing class AttendanceTaken {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-
+		system.debug(regs);
         return regs;
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Attendance__c> getSessionAttendance(List<Id> sessionIds, List<Id> registrationIds) {
+        system.debug('registrationIds - '+registrationIds);
+        system.debug('sessionIds - '+sessionIds);
+        List<Attendance__c> attendanceRecords = new List<Attendance__c>();
+
+        if (sessionIds != null && !sessionIds.isEmpty() && registrationIds != null && !registrationIds.isEmpty()) {
+            system.debug('test');
+            // Query the Attendance__c records based on the given session and registration IDs
+            attendanceRecords = [SELECT Id, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c, Session__c, Registration__c
+                                 FROM Attendance__c
+                                 WHERE Session__c IN :sessionIds AND Registration__c IN :registrationIds];
+        }
+		system.debug(attendanceRecords);
+        return attendanceRecords;
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<Attendance__c> checkAttendanceTransfer(List<Id> sessionIds, List<Id> registrationIds) {
+        system.debug('registrationIds - '+registrationIds);
+        system.debug('sessionIds - '+sessionIds);
+        List<Attendance__c> attendanceRecords = new List<Attendance__c>();
+		List<Attendance__c> norAtt = new List<Attendance__c>();
+        List<Attendance__c> tranAtt = new List<Attendance__c>();
+        if (sessionIds != null && !sessionIds.isEmpty() && registrationIds != null && !registrationIds.isEmpty()) {
+            system.debug('test');
+            // Query the Attendance__c records based on the given session and registration IDs
+            attendanceRecords = [SELECT Id, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c, Session__c, Registration__c
+                                 FROM Attendance__c
+                                 WHERE Session__c IN :sessionIds AND Registration__c IN :registrationIds];
+        }
+        for(Attendance__c at:attendanceRecords){
+            if(at.AttendedPartA__c=='Yes (Transfer)' || at.AttendedPartA__c=='No (Transfer)' || at.AttendedPartA__c=='Makeup (Transfer)' ){
+                tranAtt.add(at);
+            }
+            else if(at.AttendedPartA__c=='Yes' || at.AttendedPartA__c=='No' || at.AttendedPartA__c=='Makeup'){
+                norAtt.add(at);
+            }
+            
+        }
+        system.debug('transfer - ' +tranAtt);
+        system.debug('not transfer -'+norAtt);
+        if(norAtt.isEmpty() && !tranAtt.isEmpty()){
+            return tranAtt;
+        }
+        else{
+            return null;
+        }
+		
+       
+    }
+    
     @AuraEnabled
     public static void insertAttendanceRec(String wrapParams, string sessionId, string prgmID, string sessName){
         system.debug('myListJSON -- ' +wrapParams);

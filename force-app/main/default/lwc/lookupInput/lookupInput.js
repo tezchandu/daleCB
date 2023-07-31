@@ -11,6 +11,7 @@ export default class LookupInput extends LightningElement {
     recordsList = [];
     selectedRecordName;
     @api disabled;
+    @api valSelected ;
 
     @api objectApiName = "Award__c";
     @api fieldApiName = "Name";
@@ -32,6 +33,7 @@ export default class LookupInput extends LightningElement {
             selectedRecordId: this.selectedRecordId,
             parentRecordId: this.parentRecordId,
             parentFieldApiName: this.parentFieldApiName,
+            valSelected: this.valSelected
         };
     }
 
@@ -45,8 +47,10 @@ export default class LookupInput extends LightningElement {
     //getting the default selected record
     connectedCallback() {
         if (this.selectedRecordId) {
+            console.log('con' +this.selectedRecordId);
             this.fetchSobjectRecords(true);
         }
+        
        // this.addEventListener('clearfield', this.clearField);
     }
     disconnectedCallback() {
@@ -69,6 +73,8 @@ export default class LookupInput extends LightningElement {
         }).catch(error => {
             console.log(error);
         })
+        console.log('this.selectedRecordName -fetch  - '+this.selectedRecordName);
+        console.log('this.recordsList -fetch  - '+this.recordsList);
     }
 
     get isValueSelected() {
@@ -79,6 +85,11 @@ export default class LookupInput extends LightningElement {
     handleChange(event) {
         this.searchString = event.target.value;
         this.fetchSobjectRecords(false);
+        console.log(this.valSelected);
+    }
+    updateSelectedValues(selectedValues) {
+        this.valSelected = selectedValues;
+        console.log('this.valSelected -' +this.valSelected);
     }
 
     //handler for clicking outside the selection panel
@@ -132,6 +143,7 @@ export default class LookupInput extends LightningElement {
             detail: selectedRecord
         });
         //dispatching the custom event
+        console.log('this.selectedRecordName -hhh  - '+this.selectedRecordName);
         this.dispatchEvent(selectedEvent);
     }
     
