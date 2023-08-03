@@ -1,7 +1,25 @@
 <template>
-    <div class="container">
+    <div class="table-container">
         <h2 class="bold-and-double-bigger">Graduation Screen</h2>
         <br/>
+    <!--<div>
+        <div>
+            <p>This is Screen 1</p>
+            </lightning-input-field>
+            
+            <lightning-button
+                class="slds-m-top_small"
+                label="Next"
+                onclick={goToStepThree}
+            ></lightning-button>
+        </div>
+            
+          
+    </div>
+-->
+    
+        {flowValue}
+    <template if:true={flowValue}>
     <table class="slds-table slds-table_cell-buffer slds-table_bordered" aria-labelledby="element-with-table-label other-element-with-table-label">
       
         <template if:true={registrationRecords}>
@@ -14,6 +32,7 @@
                         <th>Transfer Attendance</th>
                         <th>No Payment, Apply Credit?</th>
                         <th>Payment Exists, Transfer Payment?</th>
+                        <th>Refund Payment</th>
                         <th>Payment Exists, Refund Payment?</th>
                     </tr>
                 </thead>
@@ -38,7 +57,7 @@
                             <td>
                                 
                                 <c-lookup-Input name={registration.Id} data-id="programCode" data-contactname={registration.ContactName}
-                                label="Program Code"   disabled={registration.isDisabledProgramCode} data-value={registration.attendanceTaken}
+                                label="Program Code"  selected-icon-name="custom:custom33" disabled={registration.isDisabledProgramCode} data-value={registration.attendanceTaken}
                                  object-api-name="Program__c" field-api-name="Name" other-field-api-name="" data-exitval ={registration.attendanceTaken}
                                  onvalueselected={handleAttendance} >
                                 </c-lookup-Input>
@@ -56,6 +75,7 @@
                                         options={attendanceValues}
                                         data-id="atttendance"
                                         onchange={handleAttendance}
+                                        
                                     ></lightning-combobox>
                                 </template>
                                 
@@ -73,7 +93,7 @@
                                     data-id="atttendance"
                                     onchange={handleAttendance}
                                    ></lightning-combobox>
-                                </template>
+                                    </template>
                                 <template if:false={disableTransferAttendance}>
                                     <lightning-combobox
                                     name={registration.Id}
@@ -121,14 +141,27 @@
                                 ></lightning-combobox>
                             </td>
                             <td>
+                                <lightning-input
+                                    name={registration.Id}
+                                    data-val={registration.attendanceTaken}
+                                    data-exitval ={registration.attendanceTaken}
+                                    data-contactname={registration.ContactName}
+                                    disabled={registration.isDisabledRefAmount}
+                                    options={attendanceValues}
+                                    data-id="refAmount"
+                                    value={registration.refAmount}
+                                    onchange={handleAttendance}
+                                ></lightning-input>
+                            </td>
+                            <td>
                                 <lightning-combobox
                                     name={registration.Id}
                                     value={registration.attendanceTaken}
                                     data-exitval ={registration.attendanceTaken}
                                     data-contactname={registration.ContactName}
                                     disabled={registration.isDisabledRefPay}
-                                    options={attendanceValues}
                                     data-id="refPay"
+                                    options={attendanceValues}
                                     data-paycount ={registration.feePaymentCount}
                                     onchange={handleAttendance}
                                 ></lightning-combobox>
@@ -141,6 +174,9 @@
         </template>
     
       </table>
+    </template>
+    
+   
       <template if:true={errorMessage}>
         <div class="error-message">{errorMessage}</div>
 
