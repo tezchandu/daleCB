@@ -6,3 +6,12 @@
     font-size: 18px;
     text-align: center;
   }
+  .table-container table {
+    overflow-x: auto;
+  }
+  
+  /* Make the table heading wrap the text */
+  .table-container th {
+    white-space: normal;
+    word-wrap: break-word;
+  }

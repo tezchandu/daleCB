@@ -12,7 +12,7 @@ public class RegistrationFecthforAttendance {
         List<Registration__c> gradRegs2UpdateList = new List<Registration__c>();
         //String prgId = RegistrationFecthforAttendance.updateRegistrationGraduate(programId);
         List<Registration__c> regs = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c,
-        								ProgramCode__r.MinimumSessions__c ,Completed_Sessions_Count__c 
+                                      TotalPayments__c,ProgramCode__r.MinimumSessions__c ,Completed_Sessions_Count__c 
                                       FROM Registration__c WHERE ProgramCode__c = :programId AND ExitType__c=null  ];
         
         for(Registration__c rg: regs){
@@ -37,16 +37,17 @@ public class RegistrationFecthforAttendance {
                         }
             }
         }
-        List<Registration__c> regs2Update = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c,
+        List<Registration__c> regs2Update = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c,TotalPayments__c,
         								ProgramCode__r.MinimumSessions__c ,Completed_Sessions_Count__c,ProgramCode__r.Fee_payments_count__c
                                       FROM Registration__c WHERE ProgramCode__c = :programId AND ExitType__c=null  ];
         system.debug(regs2Update);
             for (Registration__c rg : regs2Update) {
-                options.add(new RegWrapper(rg.Name, rg.ProgramCode__c,rg.id,rg.ContactName__r.Name,rg.ProgramCode__r.Fee_payments_count__c));
+                options.add(new RegWrapper(rg.Name, rg.ProgramCode__c,rg.id,rg.ContactName__r.Name,rg.ProgramCode__r.Fee_payments_count__c,rg.TotalPayments__c));
             }
     system.debug(options);
     return options;
     }
+    
     public static String updateRegistrationGraduate(String programId){
         List<Registration__c> gradRegs2UpdateList = new List<Registration__c>();
         List<Registration__c> regs = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c,
@@ -91,6 +92,13 @@ public class RegistrationFecthforAttendance {
                         return false;
                     }
         
+    }
+    @AuraEnabled
+    public static List<Registration__c> getRefund(List<Id> registrationIds){
+        List<Registration__c> regs = [select id,BalanceDue__c,programcode__c,TotalPayments__c,AccountName__c,
+                               ContactName__c,Total__c,BaseRegistrationFee__c,ProgramCode__r.Product__c from Registration__c where id IN :registrationIds];
+        System.debug(regs);
+        return regs;
     }
     @AuraEnabled
     public static void handleSave(String wrapParams, string prgmID){
@@ -255,7 +263,7 @@ public class RegistrationFecthforAttendance {
                             fp1.Participant_Registration__c = reg.Id;
                             fp1.Payment_Type__c = 'Refund';
                             fp1.Payment_Date__c = system.today();
-                            fp1.Payment_Amount__c = reg.TotalPayments__c;
+                            fp1.Payment_Amount__c = wrap.refAmountVal;
                             fp1.Program_Code__c=reg.ProgramCode__c;
                         feepayments2Insert.add(fp1);
                         feepayments2Insert.add(fp);
@@ -288,14 +296,15 @@ public class RegistrationFecthforAttendance {
         @AuraEnabled public String Id;
         @AuraEnabled public String contactName;
         @AuraEnabled public Decimal feePaymentCount;
+        @AuraEnabled public Decimal totalPayment;
         
-        
-        public RegWrapper(String name, String programCode, String Id, String contactName ,Decimal feePaymentCount) {
+        public RegWrapper(String name, String programCode, String Id, String contactName ,Decimal feePaymentCount, Decimal totalPayment) {
             this.name = name;
             this.programCode = programCode;
             this.Id = Id;
             this.contactName = contactName;
             this.feePaymentCount = feePaymentCount;
+            this.totalPayment = totalPayment;
         }
     }
     public class createAttendancenPayments {
@@ -304,6 +313,7 @@ public class RegistrationFecthforAttendance {
         @AuraEnabled public String exitType{get;set;}
         @AuraEnabled public String atttendance{get;set;}
         @AuraEnabled public String noPayment{get;set;}
+        @AuraEnabled public Decimal refAmountVal{get;set;}
         
         @AuraEnabled public String transPay{get;set;}
         @AuraEnabled public String refPay{get;set;}

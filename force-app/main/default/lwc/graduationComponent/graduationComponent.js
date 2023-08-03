@@ -5,9 +5,13 @@ import getRegistrationsByProgramId from '@salesforce/apex/RegistrationFecthforAt
 import handleProduct from '@salesforce/apex/RegistrationFecthforAttendance.handleProduct';
 import handleSave from '@salesforce/apex/RegistrationFecthforAttendance.handleSave';
 import fetchRegistrationRecs from '@salesforce/apex/RegistrationFecthforAttendance.fetchRegistrationRecs';
-
+import getRefund from '@salesforce/apex/RegistrationFecthforAttendance.getRefund';
 export default class GraduationComponent extends LightningElement {
     @api recordId;
+    @api programId;
+    @track showScreen1 = true;
+    @track showScreen2 = false;
+    @api flowValue;
     @track registrationRecords = []; 
     exitTypes = [
         { label: 'Transfer', value: 'Transfer' },
@@ -21,16 +25,16 @@ export default class GraduationComponent extends LightningElement {
     ];
     isFieldDisabled =false;
     errorMessages ={};
+    @track exitTypeSelected ;
     updatedValues = [];
     disableProdAttendance =false;
     disableTransferAttendance = false;
     connectedCallback() {
         // Call the function to fetch the related Registration__c records
         
-    
-       // this.fetchRegistrationRecords();
+       this.fetchRegistrationRecords(this.recordId);
     }
-    @wire(getRegistrationsByProgramId, {programId: '$recordId'})
+    /*@wire(getRegistrationsByProgramId, {programId: '$recordId'})
     wiredGetRegistrationsByProgramId({ data, error }) {
             console.log('recordId -- '+this.recordId);
             console.log('data '+JSON.stringify(data));
@@ -41,9 +45,26 @@ export default class GraduationComponent extends LightningElement {
             // Handle the error
             console.log(error);
         }
+    }*/
+    
+     // Event handler to navigate to Screen2
+    handleScreen() {
+        console.log(this.showScreen2);
+        this.showScreen1 = false;
+        this.showScreen2 = true;
+        console.log(this.showScreen2);
+    }
+    goToStepThree() {
+        
+
+        //this.template.querySelector('div.stepTwo').classList.add('slds-hide');
+        this.template
+            .querySelector('div.stepThree')
+            .classList.remove('slds-hide');
     }
     fetchRegistrationRecords() {
-        //this.recordId = '$recordId';
+        
+        //this.recordId = 'a123J000003qYVMQA2';
         console.log('recordId in fetch-- '+this.recordId);
         fetchRegistrationRecs({ programId:this.recordId })
         .then(result => {
@@ -52,7 +73,14 @@ export default class GraduationComponent extends LightningElement {
              ContactName: reg.contactName, // Map ContactName__r.Name field
              isDisabled :false,
              feePaymentCount : reg.feePaymentCount,
-             attendanceTaken :''
+             attendanceTaken :'',
+             isDisabledTransPay : true,
+             isDisabledProgramCode :true,
+             isDisabledNoPay :true,
+             isdisabledattendance: true,
+             isDisabledRefAmount :true,
+             isDisabledRefPay:true,
+             refAmount:reg.totalPayment,
         }));
             console.log('registrationRecords'  +this.registrationRecords);
         }) .catch(error => {
@@ -63,6 +91,7 @@ export default class GraduationComponent extends LightningElement {
     handleExit(event){
         
         const exitTypeValue =event.target.value;
+        //this.exitTypeSelected = event.target.value;
         const dataId = event.target.getAttribute('data-id');
         const contactName = event.target.dataset.contactname;
         console.log(exitTypeValue);
@@ -70,31 +99,57 @@ export default class GraduationComponent extends LightningElement {
         const registrationId = event.target.name;
         //const rowElement = event.target.closest('tr');
         const programCodeInput1 = this.template.querySelector('[data-id="atttendance"]');
-        console.log('tem - '+programCodeInput1.name);
-        console.log('tem - '+programCodeInput1.disabled);
-        console.log('tem - '+programCodeInput1.value);
+        console.log('tem name- '+programCodeInput1.name);
+        console.log('tem programCodeInput1.disabled - '+programCodeInput1.disabled);
+        console.log('tem programCodeInput1.value- '+programCodeInput1.value);
+        const registrationIds = this.registrationRecords.map(reg => reg.Id);
+        console.log('registrationIds ==== '+registrationIds);
+        const getRefundMap = new Map();
+        getRefund({ registrationIds: registrationIds })
+        .then(getRefund =>{
+            console.log('refund - '+JSON.stringify(getRefund));
+            if(!getRefund || getRefund.length === 0){
+                 //getRefundMap = new Map();
+                getRefund.forEach(ref => {
+                    getRefundMap.set(ref.Registration__c, ref);
+                            });
+            }
+        })
+            console.log('getRefundMap - ' +getRefundMap.get('a0v3J0000001TtuQAE'));
+            this.registrationRecords = this.registrationRecords.map(registration => {
+                
+                if (registration.Id === registrationId) {
+                    console.log('tem feePaymentCount - '+registration.feePaymentCount);
+                    registration.isdisabledattendance = exitTypeValue !== 'Transfer';
+                    
+                    if(registration.feePaymentCount<0 || exitTypeValue !== 'Transfer' ){
+                        registration.isDisabledTransPay = true;
+                    }
+                    registration.isDisabledProgramCode = exitTypeValue !== 'Transfer';
+                    if(registration.feePaymentCount<0 || exitTypeValue === 'Transfer'){
+                        registration.isDisabledRefPay = true;
+                        registration.isDisabledRefAmount = true;
+                        registration.refAmount = '';
+                    }else if(registration.feePaymentCount>0 || exitTypeValue !== 'Transfer'){
+                        const regRecord = getRefundMap.get(registration.Id);
+                        console.log('regRecord - '+regRecord);
+                        registration.isDisabledRefPay = false;
+                        registration.isDisabledRefAmount = false;
+                        //registration.refAmount = regRecord ? regRecord.TotalPayments__c  : 0.00;
+                    }
+                    if(registration.feePaymentCount>0){
+                        registration.isDisabledNoPay = true;
+                    }else{
+                        registration.isDisabledNoPay = false;
+                    }
+                    registration.attendanceTaken=exitTypeValue;
+                }
+                return registration;
+            });
+        
+        console.log('after - '+this.registrationRecords );
         
 
-        
-        this.registrationRecords = this.registrationRecords.map(registration => {
-            if (registration.Id === registrationId) {
-                console.log('tem - '+registration.feePaymentCount);
-                registration.isdisabledattendance = exitTypeValue !== 'Transfer';
-                
-                if(registration.feePaymentCount<0 || exitTypeValue !== 'Transfer'){
-                    registration.isDisabledTransPay = true;
-                }
-                registration.isDisabledProgramCode = exitTypeValue !== 'Transfer';
-                if(registration.feePaymentCount<0 || exitTypeValue === 'Transfer'){
-                    registration.isDisabledRefPay = true;
-                }
-                if(registration.feePaymentCount>0){
-                    registration.isDisabledNoPay = true;
-                }
-                registration.attendanceTaken=exitTypeValue;
-            }
-            return registration;
-        });
         
         //this.handleProduct();
     
@@ -108,11 +163,15 @@ export default class GraduationComponent extends LightningElement {
         let transPay;
         let refPay;
         let attendanceTaken;
+        let refAmountVal;
         const prgmAttendanceTaken = event.target.getAttribute('data-value');
+        //const refAmountVal = event.target.getAttribute('data-val');
         const exitType = event.target.getAttribute('data-exitval');
         console.log('dataId - '+dataId);
         console.log('attendanceTaken - '+prgmAttendanceTaken);
         console.log('exitType - '+exitType);
+        console.log('refAmountVal - '+event.target.getAttribute('data-val'));
+        console.log('event.target.value - ' +event.target.value);
         const registrationId = event.target.name;
         console.log('reg 106 - '+registrationId);
         const contactName = event.target.dataset.contactname;
@@ -124,6 +183,8 @@ export default class GraduationComponent extends LightningElement {
             transPay=valGot;
         }else if(dataId === 'refPay'){
             refPay=valGot;
+        }else if(dataId === 'refAmount'){
+            refAmountVal=valGot;
         }
             console.log('attendanceTaken - '+attendanceTaken);
             console.log('transPay - '+transPay);
@@ -275,7 +336,7 @@ export default class GraduationComponent extends LightningElement {
     let existingEntry = this.updatedValues.find(entry => entry.registrationId === registrationId);
     if (!existingEntry) {
     const  gotPrgmVal= JSON.parse(prgmval);
-    this.createNewEntry(registrationId, contactName, dataId, valGot,gotPrgmVal,prgmID,exitType);
+    this.createNewEntry(registrationId, contactName, dataId, valGot,gotPrgmVal,prgmID,exitType,refAmountVal);
     } else {
         // Update the corresponding value based on the data ID
         if (dataId === 'atttendance') {
@@ -291,12 +352,15 @@ export default class GraduationComponent extends LightningElement {
             existingEntry.noPayment = valGot;
         } else if (dataId === 'programCode') {
             existingEntry.programCode = gotPrgmVal.id;
+        } else if (dataId === 'refAmount') {
+            existingEntry.refAmountVal = valGot;
         }
     }
     console.log('existingEntry - ' +this.updatedValues);
 
     }
-    createNewEntry(registrationId, contactName, dataId, valGot,gotPrgmVal, prgmID, exitType) {
+            
+    createNewEntry(registrationId, contactName, dataId, valGot,gotPrgmVal, prgmID, exitType, refAmountVal) {
     const newEntry = {
         registrationId: registrationId,
         contactName: contactName,
@@ -306,7 +370,8 @@ export default class GraduationComponent extends LightningElement {
         refPay: null,
         programCode: null,
         prgmID :prgmID,
-        exitType :exitType
+        exitType :exitType,
+        refAmountVal:refAmountVal
     };
    
     // Set the corresponding value based on the data ID
@@ -320,6 +385,8 @@ export default class GraduationComponent extends LightningElement {
         newEntry.refPay = valGot;
     } else if (dataId === 'programCode') {
         newEntry.programCode = gotPrgmVal.id;
+    } else if (dataId === 'refAmount') {
+        newEntry.refAmountVal = valGot;
     }
     console.log('reg - '+registrationId);
     this.updatedValues.push(newEntry);
@@ -336,6 +403,7 @@ export default class GraduationComponent extends LightningElement {
         console.log('programCode:', entry.programCode);
         console.log('exitType:', entry.exitType);
         console.log('prgmID:', entry.prgmID);
+        console.log('refAmount:', entry.refAmountVal);
     });
         const updatedParams = JSON.stringify(this.updatedValues) ;
         console.log('updatedParams  - ' +updatedParams);
@@ -350,9 +418,9 @@ export default class GraduationComponent extends LightningElement {
                       }, 5000);
                       this.dispatchEvent(new CloseActionScreenEvent());*/
                       window.alert(' Successfully Updated.');
-                      window.location.href = 'https://dalecarnegie--cbdev.sandbox.lightning.force.com/lightning/r/Program__c/'+this.recordId+'/view';
+                      //window.location.href = 'https://dalecarnegie--cbdev.sandbox.lightning.force.com/lightning/r/Program__c/'+this.recordId+'/view';
                     //this.navigateToRecord(result.id);    
-        
+                    this.dispatchEvent(new CloseActionScreenEvent());
                 })
                 .catch(error => {
                      console.log('error - '+error)

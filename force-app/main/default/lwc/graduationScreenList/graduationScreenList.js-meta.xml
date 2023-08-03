@@ -7,14 +7,7 @@
         <target>lightning__RecordPage</target>
         <target>lightning__HomePage</target>
         <target>lightning__Tab</target>
-        <target>lightning__FlowScreen</target>
+      
         <target>lightning__RecordAction</target>
       </targets>
-    <targetConfigs>
-        <targetConfig targets="lightning__FlowScreen">
-            <property name="flowValue" type="String" label="Flow Value"/>
-            <property name="programId" type="String" label="Record ID"/>
-            <property name="recordId" type="String" label="Record-ID"/>
-        </targetConfig>
-    </targetConfigs>
 </LightningComponentBundle>
