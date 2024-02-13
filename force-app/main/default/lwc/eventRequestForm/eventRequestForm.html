@@ -1,0 +1,269 @@
+<template >
+      <div class="slds-form form  slds-p-around_medium">                                            
+        <template if:false={redirect}> 
+       <b><h2 id="modal-heading-01" class="slds-text-heading_large slds-align_absolute-center">Event Registration Form</h2></b>
+       <br/>
+        <p><b><lightning-formatted-text value='To register for an upcoming Carnegie Learning Center Training Event, fill 
+        out the form below and click "Submit" to submit your Registration'></lightning-formatted-text></b></p><br/><br/>
+        <p><lightning-formatted-text value='All areas indicated with an * and bold type must be filled in'></lightning-formatted-text></p>
+        
+            
+            <div class="slds-p-around_medium lgc-bg textfields">
+                <b> Event of Interest :</b> {eventType}<br/>
+
+                    <b> Event Location : </b> {eventLocation} <br/>
+                    <b> Event Cost : </b> {eventCost} <br/>
+                    <b> Host Franchise : </b> {hostFranchise} <br/>
+                    <b> Local Contact Name : </b> {LCname} <br/>
+                    <b> Local Contact Email : </b> {LCEmail} <br/>
+                    <template if:false={onlineEvent}>
+                    <b> Local Contact Street Address : </b> {LCstreetAddress} <br/><br/>
+                    </template>
+            </div></br>
+            <lightning-card title={timeZone} >
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                    <thead>
+                        <tr>
+                            <th>Session Number</th>
+                            <th>Start Date</th>
+                            
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Iterate over the sessions and display them in rows -->
+                        <template for:each={sessions} for:item="session">
+                            <tr key={session.Id}>
+                                <td>{session.sessionNumber}</td>
+                                <td>{session.sessionDate}</td>
+                                
+                                <td>{session.sessionTime}</td>
+                                <td>{session.sessionStartTime}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </lightning-card>
+        
+        <!--<h1>
+            <lightning-formatted-text value = 'Event '></lightning-formatted-text> 
+
+        </h1>-->
+            <br/>
+        <b> <h1 class="slds-p-around_medium lgc-bg textfields">
+            <lightning-formatted-text value = 'Registrant Information'></lightning-formatted-text>
+            </h1>
+        </b>
+
+        <div class="slds-p-around_medium lgc-bg textfields">
+        <lightning-combobox name="Salutation" label="Salutation" value={value} placeholder="--Select--" 
+        data-id ="salutation" data-name={eventId} options={options} onchange={handleChange}></lightning-combobox>
+        <lightning-input type="text" label="First Name/Given Name" required data-id="firstName"
+        value={firstName} name="firstName" data-name={eventId} onchange={handleChange}></lightning-input>
+        <lightning-input type="text" label="Middle Name" data-id="middleName"
+        value={middleName} name="middleName" data-name={eventId} onchange={handleChange}></lightning-input>
+        
+        <lightning-input type="text" label="Last Name/Family Name" required data-id="lastName"
+        value={lastName} name="lastName" data-name={eventId} onchange={handleChange}></lightning-input>
+
+        <lightning-input type="text" label="Job Title" required data-id="jobTitle"
+        value={jobTitle} name="jobTitle" data-name={eventId} onchange={handleChange}></lightning-input>
+        </div>
+        <!--<h1><lightning-formatted-text value = 'Address Type'></lightning-formatted-text></h1>-->
+        <div >
+        <!-- 
+            
+            <lightning-input class="radiobtn" type="radio" label="Home" required data-id="home"
+                value={home} name="home" data-name={eventId} onchange={handleChange}></lightning-input>
+                
+                
+                <lightning-input class="radiobtn" type="radio" label="Business" required data-id="business"
+                value={business} name="business" data-name={eventId} onchange={handleChange}></lightning-input>
+            -->  
+        <lightning-radio-group style="margin-right: 10px;" name="addressType" label="Address Type" required options={addressTypeOptions} 
+        value={addressType} data-id="addressType" data-name={eventId} onchange={handleChange} type="radio"></lightning-radio-group>
+        
+        </div>
+        
+        <div class="slds-p-around_medium lgc-bg textfields">
+                <lightning-input type="textarea"  label="Street Adress" required data-id="streetAddress"
+                value={streetAddress} name="streetAddress" data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="text" label="City" required data-id="city"
+                value={city} name="city" data-name={eventId}  onchange={handleChange}></lightning-input>
+                <lightning-input type="text" label="State/Province" data-id="state"
+                value={state} name="state" data-name={eventId} required onchange={handleChange}></lightning-input>
+                <lightning-input type="text" required label="ZIP/Postal Code" data-id="zip"
+                value={zip} name="zip" data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="text" label="Country" required data-id="country"
+                value={country} name="country" data-name={eventId} onchange={handleChange}></lightning-input>
+
+                <lightning-input type="phone" label="Telephone" required data-id="telephone"
+                value={telephone} name="telephone" data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="text" label="Extension" data-id="extension"
+                value={extension} name="Extension"  data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="Email" required label="E-Mail Address" data-id="emailAddress"
+                value={emailAddress} name="emailAddress" data-name={eventId} onchange={handleEmailChange}></lightning-input>
+                <lightning-input type="Email" label="Confirm E-Mail Address" required data-id="confemailAddress"
+                value={confemailAddress} name="confemailAddress" data-name={eventId} onchange={handleConfirmEmailChange}></lightning-input>
+            <!-- <div if:true={emailMismatch} class="slds-text-color_error">
+                    Email and Confirm Email do not match.
+                </div>
+                <div if:false={emailMismatch} class="slds-text-color_success">
+                    Email and Confirm Email match.
+                </div>-->
+                <lightning-input type="text" label="Training Manager First Name" required data-id="trainerManFN"
+                value={trainerManFN} name="trainerManFN" data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="text"  label="Training Manager Last Name" data-id="trainerManLN"
+                value={trainerManLN} name="trainerManLN" required data-name={eventId} onchange={handleChange}></lightning-input>
+                <lightning-input type="Email" required label="Trainer Manager E-Mail" data-id="trainerManEmail"
+                value={trainerManEmail} name="trainerManEmail" data-name={eventId} onchange={handleChange}></lightning-input>
+                
+                <!--<lightning-combobox
+                        label="Language(s)"
+                        value={language} required data-id="language" name="language" data-name={eventId}
+                        options={languageOptions}
+                        onchange={handleChange}>
+                    </lightning-combobox>-->
+                <lightning-dual-listbox
+                    label="Language(s)"
+                    source-label="Available"
+                    selected-label="Selected"
+                    field-level-help="Select one or more languages"
+                    value={language}
+                    options={languageOptions}
+                    onchange={handleChange}
+                    data-id="language"
+                    data-name={eventId}>
+                </lightning-dual-listbox>
+        </div>
+        <br/>
+        <h1>
+            <b><lightning-formatted-text value = 'Franchise Information: '></lightning-formatted-text> </b>
+
+        </h1>
+        <div class="slds-p-around_medium lgc-bg textfields">
+            
+                <lightning-combobox
+                 data-id ="franchise"
+                name="activeAccounts"
+                value={selectedAccountId}
+                options={accountOptions}
+                onchange={handleAccountChange}>
+            </lightning-combobox>
+        
+        </div>
+        <!--<h1>
+            <b><lightning-formatted-text value = 'Program Exposure: '></lightning-formatted-text> </b>
+
+        </h1>-->
+        <div class="slds-p-around_medium lgc-bg textfields">
+        <!--<lightning-input type="text" label="Program Exposure" required data-id="prgExpose"
+                value={prgExpose} name="prgExpose" data-name={eventId} onchange={handleChange}></lightning-input>-->
+                <p><lightning-formatted-text value= 'PROGRAM EXPOSURE - For Pre DNA, DNA and all Curriculum Certifications 
+                 you must have had a program experience prior to registering for a 
+                 certification event. e.g.If you are applying for a Sales Certification Event,
+                  you will need to indicate when you took the Sales Program as a participant.'> </lightning-formatted-text></p>
+                <lightning-combobox
+                 data-id ="prgExpose"
+                name=""
+                value={prgExpose}
+                options={prgmExpOptions}
+                onchange={handlePrgmExpChange}>
+            </lightning-combobox>
+        </div>
+        <h1>
+            <b><lightning-formatted-text value = 'Education Information '></lightning-formatted-text> </b>
+
+        </h1>
+        <div id="education-rows">
+            <!-- Initial row for education -->
+            <div class="slds-p-around_medium">
+                <template for:each={educationRows} for:item="row" for:index="index">
+                    <div key={row.id} class="slds-grid slds-gutters">
+                        <div class="slds-col">
+                            <lightning-input
+                            type="text" name="school" label="School" placeholder="School" data-id="school"
+                            value={row.school} data-name={eventId} data-index={index} onchange={handleInputChange}
+                            ></lightning-input>
+                        </div>
+                        <div class="slds-col">
+                            <lightning-input
+                            type="text" name="location" label="Location" placeholder="Location" data-id="location"
+                            value={row.location} data-name={eventId} data-index={index} onchange={handleInputChange}
+                            ></lightning-input>
+                        </div>
+                        <div class="slds-col" >
+                            <lightning-input
+                            type="text" name="major" label="Major" placeholder="Major" data-id="major"
+                            value={row.major} data-name={eventId} data-index={index} onchange={handleInputChange}
+                            ></lightning-input>
+                        </div>
+                        <div class="slds-col">
+                            <lightning-combobox
+                            type="text" name="degreeType" label="Degree Type" placeholder="Degree Type" data-id="degreeType" options={degreeTypeOptions}
+                            value={row.degreeType} data-index={index} data-name={eventId} onchange={handleInputChange}
+                            ></lightning-combobox>
+                        </div>
+                        <div class="slds-col">
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                alternative-text="Remove Row"
+                                title="Remove Row"
+                                variant="bare"
+                                onclick={handleRemoveRow}
+                                data-index={index}
+                            ></lightning-button-icon>
+                        </div>
+                    </div>
+                </template>
+                <div class="slds-p-top_medium">
+                    <lightning-button label="Add Education Row" variant="brand" onclick={handleAddRow}></lightning-button>
+                </div>
+            </div>
+        </div>
+        
+        <br/><br/>
+        <div>
+            <lightning-button-group style = "width:100%;">
+                
+                <div class ="buttoncss" style="padding-left: 23.5rem">
+                <lightning-button style="margin-right:0.5rem" variant="brand" label="Submit" title="Save" onclick={handleClickSave} class={saveButtonClass}></lightning-button> 
+                
+             <lightning-button style="float: right;"   label="Cancel" title="Cancel" onclick={handleCancel} ></lightning-button>
+             </div>
+             
+
+            </lightning-button-group>
+            <div class="slds-text-color_error" style ="text-align: center;" if:true={showError}>
+                    Please fill in all required fields.
+                </div>
+        </div>
+        
+    </template>
+    <template if:true={redirect} >
+        <p if:true={isLoaded}></p>
+         <div if:false={isLoaded} class="slds-is-relative">
+            <lightning-spinner
+                alternative-text="Loading..." variant="brand">
+            </lightning-spinner>
+        </div>
+        <template if:false={showError} >
+       <b><h2 id="modal-heading-02" class="slds-text-heading_medium">Successfull</h2></b>
+       <br/>
+       <!-- <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                                        <c-success-message ></c-success-message>
+                                                    </div>-->
+       <div class="slds-form form">
+             <p style ="font-size:16px">Thank you, your request has been received. We will contact you for any </p>
+             <p style ="font-size:16px">    further clarifications if needed.</p>
+       <br/>
+        <lightning-button label="Ok" onclick={handleRedirect} ></lightning-button>
+         </div>
+         </template>
+          
+    </template>
+    
+   
+   </div>
+</template>

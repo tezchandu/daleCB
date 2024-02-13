@@ -1,0 +1,17 @@
+.container {
+    display: flex; /* Use flexbox to create a horizontal layout */
+    justify-content: space-between; /* Space elements evenly within the container */
+}
+
+.button-container {
+    flex: 1; /* Adjust the width as needed */
+    margin-right: 10px; /* Add margin to separate the button and datatable */
+}
+
+.datatable-container {
+    flex: 2; /* Adjust the width as needed */
+}
+
+.slds-modal.slds-fade-in-open {
+    /*background-color: rgba(255, 255, 255, 0.8); /* Adjust the alpha (last) value to control opacity */
+}

@@ -1,0 +1,23 @@
+.EmailLabel {
+    overflow: auto;
+    padding-top: 2em;
+    font-size: 15px;
+    //width: 10em;
+	font-weight: bold;
+}
+.radioslabel {
+    display: block;
+    margin-bottom: 15px;
+    margin-right: 10px ;
+}
+.slds-table .slds-radio [type=radio]+.slds-radio__label .slds-radio_faux {
+    margin-right: 10px;
+}
+.slds-radio_faux{
+    margin-right: 10px;
+}
+
+.radiobtn{
+  display: inline-block;
+  margin:0px;
+}

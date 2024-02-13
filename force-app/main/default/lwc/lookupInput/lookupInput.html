@@ -66,14 +66,21 @@
                                             </span>
                                         </span>
                                         <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">
-                                            {objectLabel} • {rec.subField} >9
+                                            {objectLabel} • {rec.subField} 
                                         </span>
                                     </span>
                                 </div>
                             </li>
                         </template>
+                        <template if:false={showRecentRecords}>
+                        <!-- Display a message when no results are found -->
+                        <div class="slds-m-vertical_medium slds-text-color_default">
+                            No results found.
+                        </div>
+                    </template>
                     </ul>
                 </div>
+                
             </template>
         </div>
     </div>

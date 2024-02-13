@@ -3,7 +3,7 @@ import fetchRecords from '@salesforce/apex/AttendanceTaken.fetchRecords';
 const DELAY = 500;
 
 export default class LookupInput extends LightningElement {
-    @api helpText = "Search Award";
+    @api helpText = "";
     @api label = "Award";
     @api required;
     @api selectedIconName = "standard:account";
@@ -13,7 +13,7 @@ export default class LookupInput extends LightningElement {
     @api disabled;
     @api valSelected ;
 
-    @api objectApiName = "Award__c";
+    @api objectApiName = "";
     @api fieldApiName = "Name";
     @api otherFieldApiName = "";
     @api searchString = "";
@@ -122,10 +122,21 @@ export default class LookupInput extends LightningElement {
     }
 
     //handler for deselection of the selected item
-    handleCommit() {
+    handleCommit(event) {
+        console.log('commit  - '+this.selectedRecordId);
+        let selectedRecord = {
+            mainField: "",
+            subField: "",
+            id: event.currentTarget.dataset.id
+        };
         this.selectedRecordId = "";
         this.selectedRecordName = "";
-        
+        const selectedEvent = new CustomEvent('valueselected', {
+            detail: selectedRecord
+        });
+        //dispatching the custom event
+        console.log('this.selectedRecordName -hhh  - '+this.selectedRecordName);
+        this.dispatchEvent(selectedEvent);
     }
 
     //handler for selection of records from lookup result list

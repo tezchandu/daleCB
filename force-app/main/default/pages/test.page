@@ -1,0 +1,95 @@
+<apex:page standardController="Program__c" extensions="AttendanceEmailController" standardStylesheets="false" renderAs="pdf" applyHtmlTag="false" showHeader="false"  applyBodyTag="false">
+    
+    
+    <apex:form >
+        <head>
+            
+           
+        </head>
+        <div class="slds-page-header__title">
+            
+            <p style=" text-align: center;"><b><u>PROGRAM ATTENDANCE / AWARD REPORT </u></b></p>
+            <h5 style = "font-weight: normal;"> Program Name: &nbsp;{!program.Name} &nbsp; </h5>
+            <h5 style = "font-weight: normal;"> Session: &nbsp;{!formattedSessionDate} &nbsp;</h5> 
+            <h5 style = "font-weight: normal;"> Day: &nbsp;{!program.Weekdays__c} &nbsp;</h5> 
+            <h5 style = "font-weight: normal;"> Graduation Date : &nbsp;{!formattedGraduationDate} &nbsp;</h5> 
+            <h5 style = "font-weight: normal;"> Location : &nbsp;{!program.Program_Location_Value__c} &nbsp;</h5>            
+            <h5 style = "font-weight: normal;"> Trainer : &nbsp;{!trainersText} &nbsp;</h5> 
+            
+            <br/><br/>
+            <h6 style="padding-left : 350px "> X = Attended, N= Absent, M=Makeup, Blank=Not Recorded</h6>
+            <apex:pageBlock >
+            <table style="width:100%; border: 1px solid black; border-collapse: collapse">
+                <thead>
+                <tr style="background-color: #f2f2f2; border: 1px solid black;">
+                    <th style="border: 1px solid black; font-size: 9px;"> Participant's <br/> Name &nbsp;</th> 
+                    <th style="border: 1px solid black; font-size: 9px;" > Work Phone &nbsp;</th>
+                    <th  style="border: 1px solid black; font-size: 9px; ">  Rep &nbsp;</th> 
+                    <th  style="border: 1px solid black; font-size: 9px; "> Registration Type &nbsp;</th>
+                    
+                    <apex:repeat value="{!sessionnumbers}" var="key">
+                        <th style="center-text ; border: 1px solid black; font-size: 9px;">
+                            &nbsp; {!key} &nbsp; &nbsp; 
+                            
+                        </th>
+                    </apex:repeat>
+                    <th style="border: 1px solid black; font-size: 9px;" > Exit Type &nbsp;</th>
+                    <!-- <th style="border: 1px solid black;border-collapse: collapse;">Savings</th>-->
+                </tr> 
+                </thead>
+                <tr style="border: 1px solid black;">
+                    <td style="border: 0.5px solid black; font-size: 9px;">
+                        <apex:repeat value="{!namesList}" var="key">                             
+                            {!key} 
+                            <br/>
+                            <br/>
+                            
+                        </apex:repeat>
+                    </td>
+                
+                    <td style="border: 0.5px solid black; font-size: 9px;">
+                        <apex:repeat value="{!namesList}" var="key"> 
+                            <apex:repeat value="{!contactsPhone[key]}" var="keys"> 
+                                {!keys} 
+                                <br/><br/>
+                            </apex:repeat>                   
+                        </apex:repeat>
+                    </td>
+                    <td style="border: 0.5px solid black; font-size: 9px;">
+                        <apex:repeat value="{!namesList}" var="key"> 
+                            <apex:repeat value="{!repMap[key]}" var="keys"> 
+                                {!keys} 
+                                <br/><br/>
+                            </apex:repeat>                   
+                        </apex:repeat>
+                    </td>
+                    <td style="border: 0.5px solid black; font-size: 9px;">
+                        <apex:repeat value="{!namesList}" var="key"> 
+                            <apex:repeat value="{!regTypeMap[key]}" var="keys"> 
+                                {!keys} 
+                                <br/><br/>
+                            </apex:repeat>                   
+                        </apex:repeat>
+                    </td>
+                    <apex:repeat value="{!sessionnumbers4Iterate}" var="key">           
+                        <td style="border: 0.5px solid black; font-size: 9px;">
+                            <apex:repeat value="{!sessionattendanceNew[key]}" var="value">
+                                {!value} <br/> <br/>
+                            </apex:repeat>
+                        </td>
+                    </apex:repeat>
+                    <td style="border: 0.5px solid black; font-size: 9px;">
+                        <apex:repeat value="{!namesList}" var="key"> 
+                            <apex:repeat value="{!exitTypeMap[key]}" var="keys"> 
+                                {!keys} 
+                                <br/><br/>
+                            </apex:repeat>                   
+                        </apex:repeat>
+                    </td>
+                </tr>
+                
+            </table>
+            </apex:pageBlock>
+        </div>
+    </apex:form>
+</apex:page>

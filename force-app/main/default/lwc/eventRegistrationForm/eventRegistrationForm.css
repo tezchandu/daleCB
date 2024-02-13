@@ -1,0 +1,100 @@
+.form{
+	
+    width: 70%;
+    position: absolute;
+    /*margin: 10em;*/
+    background-color: white;
+    padding-left: 14em;
+   
+}
+
+.EmailLabel {
+    overflow: auto;
+    padding-top: 2em;
+    font-size: 15px;
+    //width: 10em;
+	font-weight: bold;
+}
+
+.emailInput{
+	width:26em;
+	float:left;
+	margin-right: 5px;
+}
+
+.localContact {
+    float: left;
+    padding-top: 1em;
+    font-weight: bold;
+    margin: 0px;
+    font-size: 15px;
+}
+
+.helpText1 {
+    font-size: 10px;
+    padding-top: 38px;
+}
+
+.Dates{
+    float: left;
+    padding-top: 2em;
+    font-weight: bold;
+    margin: 0;
+    font-size: 15px;
+}
+
+.helpText2{
+    font-size: 10px;
+    padding-top: 53px;
+    margin: 0em;
+}
+
+.EventLocation{
+    float: left;
+    padding-top: 1em;
+    font-weight: bold;
+    margin: 0;
+    font-size: 15px;
+}
+
+.helpText3 {
+    font-size: 10px;
+    padding-top: 38px;
+    margin: 0em;
+}
+
+.RecommendedHotel {
+    float: left;
+    padding-top: 2em;
+    font-weight: bold;
+    margin: 0;
+    font-size: 15px;
+}
+
+.helpText4 {
+    font-size: 10px;
+    padding-top: 53px;
+    margin: 0em;
+}
+
+.textarea{
+	width : 26em; 
+	float : right;
+	padding-top : 10px;
+	margin:5px
+}
+
+.textarea1{
+	width : 26em; 
+	float : right;
+	
+}
+
+.slds-required {
+    position: absolute;
+    margin: 0.5em 10em 0 -5.5em;
+}
+
+.slds-dropdown-trigger{
+    display:inline !important;
+}

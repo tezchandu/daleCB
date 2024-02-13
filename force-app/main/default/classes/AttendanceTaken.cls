@@ -6,7 +6,7 @@ public with sharing class AttendanceTaken {
         List<String> picklistValues = new List<String>();
         List<SessionWrapper> options = new List<SessionWrapper>();
         List<Session__c> sessRecs = [select id, Name,SessionNumber__c, AttendanceTaken__c, SessionDate__c,
-                                     Program__c from session__c where Program__c = :id ];
+                                     Program__c from session__c where Program__c = :id order by SessionDate__c ASC];
         List<Attendance__c> attnds = [select id,Registration__c,Program__c,  Session__c, AttendedPartA__c, 
                                      AttendedPartB__c, AwardPartA__c, AwardPartB__c from Attendance__c where Program__c = :id  ];
         for(Session__c sess : sessRecs){
@@ -23,9 +23,17 @@ public with sharing class AttendanceTaken {
         for (Session__c session : sessRecs) {
             options.add(new SessionWrapper(session.SessionNumber__c, session.SessionDate__c, session.id, session.Name));
         }
+        
         system.debug(options);
         return options;
     }
+    
+    @AuraEnabled(cacheable=true)
+    public static string getCustomSettings(){
+        PushtoWebAccess__c acc = PushtoWebAccess__c.getInstance('API Access Token');
+        system.debug(acc.RedirectURL__c);
+       return acc.RedirectURL__c;
+	}
     
     @AuraEnabled
     public static List<ResultWrapper> fetchRecords(SearchWrapper inputWrapper) {
@@ -77,7 +85,7 @@ public with sharing class AttendanceTaken {
         List<Registration__c> regs = new List<Registration__c>();
         try {
 
-            regs = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c FROM Registration__c WHERE ProgramCode__c = :programId  WITH SECURITY_ENFORCED];
+            regs = [SELECT Id, Name,ContactName__r.name,ProgramCode__c,ExitType__c FROM Registration__c WHERE ProgramCode__c = :programId and ExitType__c = '' order by  ContactName__r.LastName ASC  ];
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -103,18 +111,20 @@ public with sharing class AttendanceTaken {
     }
     
     @AuraEnabled(cacheable=true)
-    public static List<Attendance__c> checkAttendanceTransfer(List<Id> sessionIds, List<Id> registrationIds) {
+    public static List<Attendance__c> checkAttendanceTransfer(List<Id> sessionIds, List<Id> registrationIds, String programId) {
         system.debug('registrationIds - '+registrationIds);
         system.debug('sessionIds - '+sessionIds);
+        List<Registration__c> regs = new List<Registration__c>();
         List<Attendance__c> attendanceRecords = new List<Attendance__c>();
 		List<Attendance__c> norAtt = new List<Attendance__c>();
         List<Attendance__c> tranAtt = new List<Attendance__c>();
         if (sessionIds != null && !sessionIds.isEmpty() && registrationIds != null && !registrationIds.isEmpty()) {
             system.debug('test');
             // Query the Attendance__c records based on the given session and registration IDs
-            attendanceRecords = [SELECT Id, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c, Session__c, Registration__c
+            attendanceRecords = [SELECT Id,Program__c, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c, Session__c, Registration__c
                                  FROM Attendance__c
                                  WHERE Session__c IN :sessionIds AND Registration__c IN :registrationIds];
+            regs =[select id ,Name ,(select id,registration__c from attendances__r) from Registration__c  where ProgramCode__c  = :programId  ];
         }
         for(Attendance__c at:attendanceRecords){
             if(at.AttendedPartA__c=='Yes (Transfer)' || at.AttendedPartA__c=='No (Transfer)' || at.AttendedPartA__c=='Makeup (Transfer)' ){
@@ -133,29 +143,69 @@ public with sharing class AttendanceTaken {
         else{
             return null;
         }
-		
-       
     }
+    @AuraEnabled(cacheable=true)
+    public static List<Registration__c> checkAttendanceExists(String programId, String sessionIds) {
+        
+        system.debug('programId - '+programId);
+         List<Registration__c> registrationsWithoutAttendance = new List<Registration__c>();
+        if (programId != null ) {
+            system.debug('test');
+           
+            
+            for (Registration__c reg : [SELECT Id, Name FROM Registration__c where ProgramCode__c = :programId]) {
+                List<Attendance__c> relatedAttendances = [SELECT Id FROM Attendance__c WHERE Registration__c = :reg.Id and Session__c = :sessionIds];
+                
+                if (relatedAttendances.isEmpty()) {
+                    registrationsWithoutAttendance.add(reg);
+                }
+            }
+        }
+        system.debug(registrationsWithoutAttendance.size());
+        system.debug(registrationsWithoutAttendance);
+        // system.debug(att.Registration__c);
+        if(registrationsWithoutAttendance != null ||!(registrationsWithoutAttendance.isempty())){
+            return registrationsWithoutAttendance;
+            
+        }
+        else
+            return null;
+        
+        
+        
+    }
+        
+        
     
     @AuraEnabled
     public static void insertAttendanceRec(String wrapParams, string sessionId, string prgmID, string sessName){
         system.debug('myListJSON -- ' +wrapParams);
         List<Attendance__c> attLists = new List<Attendance__c>();
+        List<Attendance__c> createattLists = new List<Attendance__c>();
         List<Attendance__c> existingAttList = new List<Attendance__c>();
         List<Attendance__c> existingAttList1 = new List<Attendance__c>();
         list<Registration__c> regLists = new list<Registration__c>();
         set<ID> ids = new set<ID>();
-        
+        set<ID> regIds = new set<ID>();
+        String contactName = '';
         if(prgmID!=null){
+            if(wrapParams!=null){
+                List<createAttendance> updatedAttList = (List<createAttendance>) JSON.deserialize(wrapParams, List<createAttendance>.class);
+            
+            for (createAttendance updatedAtt : updatedAttList) {
+                regIds.add(updatedAtt.registrationId);
+            }
+            }
             existingAttList = [SELECT Id, Name, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c,
                                Program__c, Session__c, Registration__c FROM Attendance__c
-                               WHERE Session__c = :sessionId AND Program__c =:prgmID];
+                               WHERE Session__c = :sessionId AND Program__c =:prgmID  ];
             // createAttendance item= (createAttendance)JSON.deserialize(wrapParams,createAttendance.Class);if(prgmID!=null){
             regLists=[select id,Name,ContactName__r.name,ProgramCode__c from Registration__c where ProgramCode__c =:prgmID];
+            system.debug('existingAttList - ' +existingAttList);
         }
         if(existingAttList.isempty()){
             for(Registration__c reg :regLists){
-                String contactName = reg.ContactName__r.Name;
+                 contactName = reg.ContactName__r.Name;
                 Attendance__c attd = new Attendance__c();
                 attd.name= contactName +' - '+sessName;
                 attd.AttendedPartA__c ='Yes';
@@ -169,8 +219,8 @@ public with sharing class AttendanceTaken {
             }
             if(attLists.size()>0) {
                 system.debug('full - '+attLists);
-                Database.SaveResult[] results = Database.insert(attLists, false);
-                for (Database.SaveResult result : results) {
+                Database.upsertResult[] results = Database.upsert(attLists, Attendance__c.id,false);
+                for (Database.upsertResult result : results) {
                     if (result.isSuccess()) {
                         Session__c s = new Session__c();
                         s.id= sessionId;
@@ -180,11 +230,11 @@ public with sharing class AttendanceTaken {
                         System.debug('The session is updated. ' +s.id);
                     }else{
                         for(Database.Error err : result.getErrors()) {
-                                System.debug('The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('Attendance fields that affected this error: ' + err.getFields());
-        }
-                       
+                            System.debug('The following error has occurred.');                    
+                            System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                            System.debug('Attendance fields that affected this error: ' + err.getFields());
+                        }
+                        
                     }
                 }
                 
@@ -192,12 +242,58 @@ public with sharing class AttendanceTaken {
                 
             }
             attLists.clear();
-        }
-        system.debug('updated att if- existingAttList '+existingAttList);
+        }else if(!(existingAttList.isempty())){
+            List<Registration__c> registrationsWithoutAttendance = new List<Registration__c>();
+            for (Registration__c reg : [SELECT Id, Name,ContactName__r.Name FROM Registration__c where ProgramCode__c = :prgmID]) {
+                List<Attendance__c> relatedAttendances = [SELECT Id FROM Attendance__c WHERE Registration__c = :reg.Id and Session__c = :sessionId];
+                
+                if (relatedAttendances.isEmpty()) {
+                    registrationsWithoutAttendance.add(reg);
+                }
+            }
+            system.debug('registrationsWithoutAttendance - ' +registrationsWithoutAttendance);
+            for(Registration__c reg :registrationsWithoutAttendance){
+                contactName = reg.ContactName__r.Name;
+                Attendance__c attd = new Attendance__c();
+                attd.name= contactName +' - '+sessName;
+                attd.AttendedPartA__c ='Yes';
+                attd.AttendedPartB__c ='Yes';
+                attd.Program__c = prgmID;
+                attd.Registration__c = reg.id;
+                attd.Session__c = sessionId;
+                
+                attLists.add(attd);
+                ids.add(reg.id);
+            }
+            if(attLists.size()>0) {
+                system.debug('half - '+attLists);
+                Database.SaveResult[] results = Database.insert(attLists, false);
+                for (Database.SaveResult result : results) {
+                    if (result.isSuccess()) {
+                        System.debug('The Attendance is created. ' );
+                    }else{
+                        for(Database.Error err : result.getErrors()) {
+                            System.debug('The following error has occurred.');                    
+                            System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                            System.debug('Attendance fields that affected this error: ' + err.getFields());
+                        }
+                        
+                    }
+                }
+               }
+            attLists.clear();
+
+                }
+           system.debug('updated att if- existingAttList '+existingAttList);
+        List<String> regId = new List<String>();
         if(wrapParams!=null){
             existingAttList1 = [SELECT Id, Name, AttendedPartA__c, AttendedPartB__c, AwardPartA__c, AwardPartB__c,
                                 Program__c, Session__c, Registration__c FROM Attendance__c
                                 WHERE Session__c = :sessionId AND Program__c =:prgmID ];
+            
+            for(Attendance__c attRegId : existingAttList1){
+                regId.add(attRegId.Registration__c);
+            }
             system.debug('updated att if- existingAttList '+existingAttList1);
             List<createAttendance> updatedAttList = (List<createAttendance>) JSON.deserialize(wrapParams, List<createAttendance>.class);
             
@@ -209,8 +305,19 @@ public with sharing class AttendanceTaken {
                         existingAtt.AttendedPartB__c = updatedAtt.attendedPartB != null ? updatedAtt.attendedPartB : 'Yes';
                         existingAtt.AwardPartA__c = updatedAtt.awardPartA;
                         existingAtt.AwardPartB__c = updatedAtt.awardPartB;
+                        existingAtt.Session__c = sessionId;
                         attLists.add(existingAtt);
                         break;
+                    } else if(!(regId.contains(updatedAtt.registrationId))){
+                        
+                		Attendance__c attdnce = new Attendance__c();
+                        attdnce.name= updatedAtt.contactName +' - '+sessName;
+                        attdnce.AttendedPartA__c = updatedAtt.attendedPartA != null ? updatedAtt.attendedPartA : 'Yes';
+                        attdnce.AttendedPartB__c = updatedAtt.attendedPartB != null ? updatedAtt.attendedPartB : 'Yes';
+                        attdnce.AwardPartA__c = updatedAtt.awardPartA;
+                        attdnce.AwardPartB__c = updatedAtt.awardPartB;
+                        existingAtt.Session__c = sessionId;
+                        createattLists.add(attdnce);
                     }
                 }
             }
@@ -220,7 +327,26 @@ public with sharing class AttendanceTaken {
         }
         system.debug(attLists);
         if (!attLists.isEmpty()) {
-            Database.SaveResult[] results = Database.update(attLists, false);
+            Database.upsertResult[] results = Database.upsert(attLists,Attendance__c.id, false);
+            for (Database.upsertResult result : results) {
+                if (result.isSuccess()) {
+                   Session__c s = new Session__c();
+                        s.id= sessionId;
+                        s.AttendanceTaken__c = true;
+                        update s;
+                        System.debug('The session is updated. ' +s.id);
+                    }else{
+                        for(Database.Error err : result.getErrors()) {
+                                System.debug('The following error has occurred while updte.');                    
+                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
+                                System.debug('Attendance fields that affected this error: ' + err.getFields());
+        }
+                        
+                }
+            }
+        }
+        if (!createattLists.isEmpty()) {
+            Database.SaveResult[] results = Database.insert(createattLists, false);
             for (Database.SaveResult result : results) {
                 if (result.isSuccess()) {
                    Session__c s = new Session__c();
@@ -228,6 +354,7 @@ public with sharing class AttendanceTaken {
                         s.AttendanceTaken__c = true;
                         update s;
                         System.debug('The session is updated. ' +s.id);
+                    System.debug('The Attendance is updated for - ' +s.id);
                     }else{
                         for(Database.Error err : result.getErrors()) {
                                 System.debug('The following error has occurred while updte.');                    

@@ -1,0 +1,25 @@
+<apex:page standardController="Franchise_Team__c" extensions="ApplyProcessSharingRulesController" action="{!apply}" >
+	<apex:pageBlock title="Franchise Team" >
+		<apex:form Id="theForm" >
+			<apex:actionFunction action="{!checkStatus}" name="refresh" reRender="theForm"/>
+			<br/>
+		    <apex:outputText value="Please wait sharing rules are in progress, you'll automatically redirect to Franchise team record when process complete." />
+		    <br/><br/>
+			<apex:pageBlockTable value="{!jobs}" var="job" >
+				<apex:column value="{!job.JobType}" />
+				<apex:column value="{!job.Status}" />
+				<apex:column value="{!job.TotalJobItems}" />
+				<apex:column value="{!job.JobItemsProcessed}" />
+				<apex:column value="{!job.NumberOfErrors}" />
+			</apex:pageBlockTable>
+
+		</apex:form>
+    </apex:pageBlock>
+	
+	<script type="text/javascript">
+	{
+		setInterval(function(){ refresh(); }, 10000);
+	}
+	</script>
+
+</apex:page>

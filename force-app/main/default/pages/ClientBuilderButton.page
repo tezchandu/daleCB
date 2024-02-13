@@ -1,0 +1,10 @@
+<apex:page standardController="Opportunity" extensions="ClientBuilderButtonController" action="{!fire}">
+    <apex:outputText rendered="false">
+    {!Opportunity.StageName}
+    </apex:outputText>
+    <apex:outputText id="errorMsg" rendered="{!doRenderMsg}">
+    	You cannot push contacts to Client Builder until the Opportunity is Closed Won.
+        <br/>
+        <a href="javascript:window.history.back();">Go Back</a>
+    </apex:outputText>
+</apex:page>

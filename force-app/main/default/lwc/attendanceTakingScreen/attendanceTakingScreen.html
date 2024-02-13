@@ -90,6 +90,12 @@
                                  object-api-name="Award__c" field-api-name="Name" other-field-api-name=""
                                  onvalueselected={handleAttendance} selected-record-id={registration.awPartA} disabled={registration.editMode}>
                                 </c-lookup-Input>
+                                <template if:true={showNoLookupFoundMsg}>
+                                <!-- Display a message when no results are found -->
+                                <div class="slds-m-vertical_medium slds-text-color_default">
+                                    No results found.
+                                </div>
+                            </template>
                             </td>
                             <td>
                                 <c-lookup-Input name={registration.Id} data-contactname={registration.ContactName}
@@ -113,7 +119,7 @@
     <br/><br/>
         <lightning-button-group>
             <div>
-            <lightning-button variant="brand-outline" label="Save" title="Save" onclick={handleClickSave} class={saveButtonClass}></lightning-button> 
+            <lightning-button variant="brand" label="Save" disabled={saveDisabled} title="Save" onclick={handleClickSave} class={saveButtonClass}></lightning-button> 
             <lightning-button variant="brand-outline" label="Cancel" title="Cancel" onclick={handleClickCancel} class="slds-m-left_x-small"></lightning-button>
             </div>
         </lightning-button-group>

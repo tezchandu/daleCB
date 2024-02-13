@@ -1,0 +1,9 @@
+.bold-and-bigger {
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .bold-and-double-bigger {
+    font-weight: bold;
+    font-size: 18px;
+    text-align: center;
+  }

@@ -1,0 +1,4 @@
+<design:component >
+  <design:attribute label ="flowValue" name="flowValue"/>
+  <design:attribute label ="recordId" name="recordId"/>
+</design:component>

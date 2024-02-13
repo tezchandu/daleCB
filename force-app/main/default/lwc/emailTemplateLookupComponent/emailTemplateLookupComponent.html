@@ -1,0 +1,21 @@
+<template>
+    <div>
+        <h2 class="bold-and-double-bigger ">Email Template</h2><br/><br/>
+        <template if:true={flag}>
+           <h1> There is this <b>{existingEmailTempName} </b> Email Template attached already. You can update by selecting another Email Template     </h1>                
+        </template>
+           <c-lookup-Input 
+         label="Email Template" selected-icon-name="custom:custom48" help-text="Search Email Template"
+         object-api-name="EmailTemplate" field-api-name="Name" other-field-api-name=""
+         data-id="emailId" onvalueselected={handleEmail}>
+        </c-lookup-Input>
+    
+    <br/><br/>
+        <lightning-button-group>
+            <div>
+            <lightning-button variant="brand" label="Save" title="Save" onclick={handleClickSave} class={saveButtonClass} disabled={disableSaveButton}></lightning-button> 
+            <lightning-button variant="brand-outline" label="Cancel" title="Cancel" onclick={handleClickCancel} class="slds-m-left_x-small"></lightning-button>
+             </div>
+        </lightning-button-group>
+    </div>
+</template>

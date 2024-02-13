@@ -1,0 +1,300 @@
+<template>
+    <div class="slds-form form">
+    <template if:false={redirect}>
+    
+        <h1 style ="font-size:20px ; text-align: center; font-weight: bold;"> Event Request Form</h1>
+        <br/><br/>
+        <p style ="font-size:14px">As of May 1, 2021, all events will be subject to $200 administrative fee. The details for Carnegie Learning Center event costs can be found on Carnegie Connect under the Operation Standards Document.</p>
+        <br/>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label localContact" for="textarea-id-001" >{controllerFieldLabel}</label>
+            <span class="slds-form-element__control">
+            <lightning-combobox required
+                                name={controllerFieldLabel}
+                                options={controllingValues} 
+                                value={selectedControlling}
+                                onchange={fetchDependentValue} onchildmethod={callFromChild}
+                                data-id="academy"
+                                >
+            </lightning-combobox>
+            </span>
+            <label class="slds-form-element__label localContact" for="textarea-id-002" >{dependentFieldLabel}</label>
+            <span class="slds-form-element__control">
+            <lightning-combobox required
+                                name={dependentFieldLabel}
+                                options={finalDependentVal} 
+                                value={selectedControlling}
+                                disabled={dependentDisabled}
+                                onchange={handleDependentPicklist}                                    
+                                >
+            </lightning-combobox>
+            </span>
+        </div>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label localContact" for="textarea-id-002" >Host Franchisee</label>
+            <span class="slds-form-element__control">
+           
+            <lightning-combobox required
+            data-id ="selectedAccountId"
+            name="activeAccounts"
+            value={selectedAccountId}
+            options={accountOptions}
+            onchange={handleAccountChange}>
+            </lightning-combobox>
+            </span>
+        </div>
+        
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact">Host Franchise Email Address</label>
+            
+                <lightning-input  type="email" data-id="email" onchange={handleInputChange} required></lightning-input>
+          
+        </div>
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" for="textarea-id-01" >Local Contact Name</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input
+                    type="textarea"
+                    value={name} data-id="name"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            <!--<textarea id="textarea-id-01" placeholder="Name" data-id="name" onchange={handleInputChange} ></textarea>
+            --></span>
+       <!-- <p class ="helpText1">Name and Phone Number</p>  -->
+        </div>
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Local Contact Phone</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input
+                    type="tel"
+                    value={selectedPhone} data-id="selectedPhone"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span>
+        </div>
+        
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Local Contact Email</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input
+                    type="Email"
+                    value={selectedEmail} data-id="selectedEmail"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        </div>
+        <div class="slds-form-element 1">
+            
+            <lightning-input type="checkbox" data-id="blended" label="Check this box if your event will have both in person and online Sessions." onchange={handleblendedChange}></lightning-input>
+           <!-- <p class ="helpText2">Check this If your Event will have both in person and online Sessions.</p> -->
+        </div>
+        
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Total Sessions</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input required
+                    type="Number"
+                    value={selectedTotalSessions} data-id="selectedTotalSessions"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        </div>
+        <template if:true={blended} >
+        <div class="slds-form-element">
+           <label class="slds-form-element__label localContact" >Additional Online Sessions</label>
+            <span class="slds-form-element__control">
+                <lightning-input
+                    type="Number"
+                    value={selectedAdtnlSessions} data-id="selectedAdtnlSessions"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        
+        </div>
+        </template>
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Session 1 Start Date</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input required
+                    type="date" 
+                    value={selectedDate} 
+                    data-id="selectedDate"
+                    onchange={handleInputChange}
+                ></lightning-input>
+                
+            </span> 
+        </div>
+
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Session 1 Start Time</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input required
+                    type="Time"
+                    value={selectedStartTime} data-id="selectedStartTime"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        </div>
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Session 1 End Time</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input required
+                    type="Time"
+                    value={selectedEndTime} data-id="selectedEndTime"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        </div>
+        <!--</div><br/>-->
+        <div class="slds-form-element 1">
+            <lightning-dual-listbox required
+                label="Week Days"
+                source-label="Available"
+                selected-label="Selected"
+                field-level-help="Select one or more Days"
+                value={weekDays}
+                options={weekDaysOptions}
+                onchange={handleInputChange}
+                data-id="weekDays"
+                >
+            </lightning-dual-listbox>
+        </div>
+        <div class="slds-form-element 1">
+            <label class="slds-form-element__label localContact" >Please enter timezone details</label>
+            
+            <span class="slds-form-element__control">
+                <lightning-input required
+                    type="Text"
+                    value={enteredTimeZone} data-id="enteredTimeZone"
+                    onchange={handleInputChange}
+                ></lightning-input>
+            </span> 
+        </div>
+        <br/>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label Dates" for="textarea-id-02">Additional Session Schedule Notes</label>
+            <span class="slds-form-element__control">
+            <textarea id="textarea-id-02" placeholder="Additional Session Dates and Times" class="slds-textarea textarea" onchange={handleInputChange} data-id="sessNotes"></textarea>
+            </span>
+            <p class ="helpText2">Please add any special notes on date and time for all the sessions.
+                 Otherwise we would assume the sessions are going to show based on the days selected and Total number of sessions</p> 
+        </div><br/>
+        <!--<div>-->
+            <lightning-input type="checkbox" data-id="showConditionalFields" label="Please check the box if this is an online event" onchange={handleCheckboxChange}></lightning-input>
+        
+        <template if:false={showConditionalFields} >
+        <div class="slds-form-element">
+            <label class="slds-form-element__label EventLocation" for="textarea-id-03">Event Location</label>
+            <span class="slds-form-element__control">
+            <lightning-input type="textarea" id="textarea-id-03" required placeholder="Event Location"  onchange={handleInputChange} data-id="eventLoc"></lightning-input>
+        </span>
+        <p class ="helpText3"></p> 
+        </div>
+        <div class="slds-form-element">
+            <lightning-input type="text" label="Street" required data-id="street"
+            value={street} name="street"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="City" required data-id="city"
+            value={city} name="city"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="State/Province"  data-id="state"
+            value={state} name="state" onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="ZIP/Postal Code"  data-id="zip"
+            value={zip} name="zip"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="Country" required data-id="country"
+            value={country} name="country"  onchange={handleInputChange}></lightning-input>
+        </div>
+        <div class="slds-form-element">
+            <lightning-input type="Phone" label="Event Location Phone Number"  data-id="eventphone"
+            value={eventphone} name="eventphone"  onchange={handleInputChange}></lightning-input>
+            
+            <br/><b><p >Recommended Hotel Address</p></b><br/>
+            <lightning-input type="Text" label=" Recommended Hotel Name"  data-id="recHotelName"
+            value={recHotelName} name="recHotelName"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="Street"  data-id="recstreet"
+            value={recstreet} name="recstreet"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="City"  data-id="reccity"
+            value={reccity} name="reccity"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="State/Province" data-id="recstate"
+            value={recstate} name="recstate" onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="ZIP/Postal Code" data-id="reczip"
+            value={reczip} name="reczip"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="text" label="Country"  data-id="reccountry"
+            value={reccountry} name="reccountry"  onchange={handleInputChange}></lightning-input>
+            <lightning-input type="Phone" label="Recommended Hotel Phone Number"  data-id="recphone"
+            value={recphone} name="recphone"  onchange={handleInputChange}></lightning-input>
+        </div>
+        </template>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label RecommendedHotel" for="textarea-id-04">Requested Carnegie Master/Master Trainer </label>
+            
+            <lightning-input type="textarea"  id="textarea-id-04" required placeholder="Carnegie Master(s)/Master Trainer(s) Full Names" class="textarea"
+            onchange={handleInputChange} data-id="reqMaster"></lightning-input>
+            
+            <p class ="helpText4">We cannot guarantee that the requested Carnegie Master/Master Trainer
+                 will be available for your event. If you have already contacted a specific Carnegie Master/Master Trainer, please note it in your request.</p> 
+        </div> <br/>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label RecommendedHotel" for="textarea-id-04">Is this a public or private event?</label>
+            <p class ="helpText4">If you select Public, the event will be entered into the Carnegie Learning Center schedule and franchisees from outside your territory will be able to register trainer candidates.</p>
+            <span class="slds-form-element__control">
+            <lightning-combobox required name="public/private" value={publicprivate} placeholder="--Select--" 
+        data-id ="publicprivate"  options={publicprivateOptions} onchange={handleInputChange}></lightning-combobox>
+            </span>
+        </div>
+        <br/>
+        <div class="slds-form-element">
+            <label class="slds-form-element__label RecommendedHotel" for="textarea-id-04">Delivery Language</label>
+            <span class="slds-form-element__control">
+            <lightning-combobox
+                required
+                value={language}
+                options={languageOptions}
+                onchange={handleInputChange}
+                data-id="language"
+                data-name={eventId}>
+            </lightning-combobox>
+            </span>
+        </div> 
+        <div class="slds-form-element">
+            <label class="slds-form-element__label RecommendedHotel" for="textarea-id-07">Additional Information:</label>
+            <span class="slds-form-element__control">
+                <lightning-textarea   data-id="addInfo"
+            value={addInfo} name="addInfo"  onchange={handleInputChange}></lightning-textarea>
+            <!--<textarea id="textarea-id-07" placeholder="Full Address and Phone Number" class="slds-textarea textarea"
+            onchange={handleInputChange} data-id="addInfo"></textarea>-->
+            </span>
+        </div> <br/><br/><br/>
+        <div class="slds-form-element">
+            <lightning-button-group>
+                <div class="emailInput">
+                <lightning-button  variant="brand" label="Submit" title="Save" onclick={handleClickSave} class={saveButtonClass}></lightning-button> 
+               <!--<lightning-button variant="brand-outline" label="Cancel" title="Cancel" onclick={handleClickCancel} class="slds-m-left_x-small"></lightning-button>
+                --></div>
+            </lightning-button-group>
+        </div>
+            <div if:true={redirect} class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_success" role="alert">
+        <span class="slds-assistive-text">Thank you, your request has been received. We will contact you for any further clarifications if needed" with a button on that page to take user back to Home Page</span>
+       
+            </div>
+        <div class="slds-text-color_error" style ="text-align: center;" if:true={showError}>
+                    Please fill in all required fields.
+                </div>
+    </template>
+    </div>
+    <!-- Button to redirect -->
+    <template if:false={showError} >
+    <template if:true={redirect}>
+        <div class="slds-form form">
+             <p style ="font-size:16px">Thank you, your request has been received. We will contact you for any further clarifications if needed.</p>
+       <br/>
+        <button onclick={handleRedirect} class="slds-button slds-button_brand">Redirect to Form</button>
+         </div>
+    </template>
+    </template>
+</template>

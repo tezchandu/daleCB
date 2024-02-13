@@ -6,6 +6,10 @@ import getSessionNumberPicklistValues from '@salesforce/apex/AttendanceTaken.get
 import getRegistrationsByProgramId from '@salesforce/apex/AttendanceTaken.getRegistrationsByProgramId';
 import getSessionAttendance from '@salesforce/apex/AttendanceTaken.getSessionAttendance';
 import checkAttendanceTransfer from '@salesforce/apex/AttendanceTaken.checkAttendanceTransfer';
+import checkAttendanceExists from '@salesforce/apex/AttendanceTaken.checkAttendanceExists';
+import getCustomSettings from '@salesforce/apex/AttendanceTaken.getCustomSettings';
+
+import { RefreshEvent } from 'lightning/refresh';
 export default class attendanceTakingScreen extends LightningElement {
     @api recordId;
     @track selectedSessionNumber;
@@ -21,7 +25,9 @@ export default class attendanceTakingScreen extends LightningElement {
     @api sessionName;
     @api regID;
     @api contName;
+    @track redirectURL='';
     errorMessage;
+    saveDisabled = false;
     sessId;
     hideEditButton =false;
     @track attendedVal ='Yes';
@@ -69,6 +75,20 @@ export default class attendanceTakingScreen extends LightningElement {
             // Handle the error
         }
     }
+
+    @wire(getCustomSettings)
+    myredirectURLS({ data, error }) {
+        if(data){
+            console.log(data);
+             console.log(JSON.stringify(data));
+             this.redirectURL = data;
+             console.log('redirectURL - '+this.redirectURL);
+        }else{
+            console.log(error);
+            console.log(JSON.stringify(error));
+        }
+    }
+
     fetchRegistrationRecords() {
         getRegistrationsByProgramId({ programId: this.recordId })
         .then(result => {
@@ -93,6 +113,7 @@ export default class attendanceTakingScreen extends LightningElement {
             
             .then(attendanceResult => {
                 if(!attendanceResult || attendanceResult.length === 0){
+                   
                     this.hideEditButton = true;
                     this.registrationRecords = this.registrationRecords.map(registration => {
                         console.log(registration.Id);
@@ -131,8 +152,8 @@ export default class attendanceTakingScreen extends LightningElement {
                     });
                     console.log('hide in if - '+this.hideEditButton);
                 }
-                else{
-
+                else
+				{
                     this.hideEditButton=false;
                     const selectedSession = this.fieldsInfo.find(
                         option => option.value === this.selectedSessionNumber
@@ -141,7 +162,25 @@ export default class attendanceTakingScreen extends LightningElement {
                     console.log('sess  id ==== ' +this.sessionId);
                     const registrationIds = this.registrationRecords.map(reg => reg.Id);
                     console.log('registrationIds ==== '+registrationIds);
-                    checkAttendanceTransfer({ sessionIds: [this.sessionId], registrationIds: registrationIds })
+                    /*const attendanceMap = new Map();
+                            attendanceResult.forEach(att => {
+                                attendanceMap.set(att.Registration__c, att);
+                            });
+                            console.log('before attendanceMap - ' +attendanceMap);
+                    this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
+					const attendanceRecord = attendanceMap.get(reg.Id);
+					return {
+							...reg,
+							atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
+							atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
+							awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
+							awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+							hideEditButton: false, // Set hideEditButton to false when attendance exists
+							editMode: true, // Set editMode to true when attendance exists
+					};
+                
+					});*/
+                 checkAttendanceTransfer({ sessionIds: [this.sessionId], registrationIds: registrationIds , programId : this.recordId})
                     .then(checkAttendanceTransfer => {
                         if(checkAttendanceTransfer){
                             this.registrationRecords.forEach(reg => {
@@ -153,16 +192,19 @@ export default class attendanceTakingScreen extends LightningElement {
                                     attendanceResult.forEach(att => {
                                         attendanceMap.set(att.Registration__c, att);
                                     });
-
+									console.log('transfer attendanceMap - ' +JSON.stringify(attendanceMap));
                                     // Create a new list to hold registration records with attendance data
                                     this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
                                         const attendanceRecord = attendanceMap.get(reg.Id);
+                                        const hasAttendance = !!attendanceRecord;
                                         return {
                                             ...reg,
                                             atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes' ) : 'Yes',
                                             atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
                                             awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
-                                            awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null
+                                            awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+                                             hideEditButton: !hasAttendance, // Set hideEditButton to true if no attendance exists
+                                             editMode: hasAttendance,
                                         };
                                     });
                                 
@@ -170,23 +212,58 @@ export default class attendanceTakingScreen extends LightningElement {
                                     
                                 } 
                                 else {
-                                    reg.hideEditButton=true;
-                                    reg.editMode=false;
-                                    const attendanceMap = new Map();
-                                    attendanceResult.forEach(att => {
-                                        attendanceMap.set(att.Registration__c, att);
-                                    });
+                                    checkAttendanceExists({ programId : this.recordId,sessionIds: this.sessionId })
+                                    .then(checkAttendanceExists => {
+                                        if(checkAttendanceExists){
+                                            this.registrationRecords.forEach(reg => {
+                                            const regRecord = checkAttendanceExists.find(regs =>  regs.Id === reg.Id);
+                                            if(regRecord){
+                                             reg.hideEditButton=true;
+                                            reg.editMode=false;
+                                            const attendanceMap = new Map();
+                                            attendanceResult.forEach(att => {
+                                                attendanceMap.set(att.Registration__c, att);
+                                            });
+                                            this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
+                                                const attendanceRecord = attendanceMap.get(reg.Id);
+                                                const hasAttendance = !!attendanceRecord;
+                                                return {
+                                                    ...reg,
+                                                    atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
+                                                    atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
+                                                    awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
+                                                    awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+                                                    hideEditButton: !hasAttendance, // Set hideEditButton to true if no attendance exists
+                                                    editMode: hasAttendance,
+                                                };
+                                            });
+                                            console.log(' if no attendance - '+JSON.stringify(this.registrationRecordsWithAttendance));
+                                            }
+                                        else{
+                                            reg.hideEditButton=false;
+                                            reg.editMode=true;
+                                            const attendanceMap = new Map();
+                                            attendanceResult.forEach(att => {
+                                                attendanceMap.set(att.Registration__c, att);
+                                            });
+                                            this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
+                                                const attendanceRecord = attendanceMap.get(reg.Id);
+                                                 const hasAttendance = !!attendanceRecord;
+                                                return {
+                                                    ...reg,
+                                                    atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
+                                                    atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
+                                                    awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
+                                                    awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+                                                    hideEditButton: !hasAttendance, // Set hideEditButton to true if no attendance exists
+                                                    editMode: hasAttendance,
+                                                };
+                                            });
 
-                                    // Create a new list to hold registration records with attendance data
-                                    this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
-                                        const attendanceRecord = attendanceMap.get(reg.Id);
-                                        return {
-                                            ...reg,
-                                            atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
-                                            atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
-                                            awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
-                                            awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null
-                                        };
+                                            }
+                                            });
+                                             console.log('else there are attendance - '+JSON.stringify(this.registrationRecordsWithAttendance));
+                                        }
                                     });
                                     console.log('registration.isdisabledattendance attendanceRecordese- '+reg.editMode);
                                     console.log('after reg- '+JSON.stringify(this.registrationRecordsWithAttendance));
@@ -195,78 +272,82 @@ export default class attendanceTakingScreen extends LightningElement {
                                 return reg;
                             })
                         }
-                        else
-                        {
-                            console.log('else in else -' +JSON.stringify(this.registrationRecords));
-                            this.registrationRecords = this.registrationRecords.map(reg => {
-                                console.log(reg.Id);
-                                reg.hideEditButton=false;
-                                reg.editMode = true ;
-                                
-                            
-                            const attendanceMap = new Map();
-                            attendanceResult.forEach(att => {
-                                attendanceMap.set(att.Registration__c, att);
-                            });
-                            // Create a new list to hold registration records with attendance data
-                            this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
-                                const attendanceRecord = attendanceMap.get(reg.Id);
-                                return {
-                                    ...reg,
-                                    atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
-                                    atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
-                                    awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
-                                    awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null
-                                };
-                            });
-                            console.log('registrationRecordsWithAttendance 239 - ' +JSON.stringify(this.registrationRecordsWithAttendance));
-                            return reg;
-                            })
-                            
-                            
-                            
-                        }
-                    })
-                    /*this.registrationRecords = this.registrationRecords.map(registration => {
-                        console.log(registration.Id);
-                   
-                        registration.editMode = true ;
-                        console.log('registration.isdisabledattendance else- '+registration.editMode);
-                    
-                        return registration;
-                    });
-                    console.log('hide in else - '+this.hideEditButton);*/
-                }
-                console.log(this.hideEditButton);
-                console.log('attendanceResult', attendanceResult);
-                //const attendanceMap = new Map();
-                /*attendanceResult.forEach(att => {
-                    attendanceMap.set(att.Registration__c, att);
-                });
+						else
+						{
+                            checkAttendanceExists({ programId : this.recordId,sessionIds: this.sessionId })
+                            .then(checkAttendanceExists => {
+                                console.log('checkAttendanceExists ef - '+checkAttendanceExists);
+                            if(checkAttendanceExists)
+                            {
+                                console.log('checkAttendanceExists - '+checkAttendanceExists);
+                                this.registrationRecords.forEach(reg => {
+                                 const regRecord = checkAttendanceExists.find(regs =>  regs.Id === reg.Id);
+                                    if(regRecord)
+                                    {
+                                        console.log('regRecord - '+regRecord);
+                                             reg.hideEditButton=true;
+                                            reg.editMode=false;
+                                            const attendanceMap = new Map();
+                                            attendanceResult.forEach(att => {
+                                                attendanceMap.set(att.Registration__c, att);
+                                            });
+                                            this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
+                                                const attendanceRecord = attendanceMap.get(reg.Id);
+                                                 const hasAttendance = !!attendanceRecord;
+                                                return {
+                                                    ...reg,
+                                                    atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
+                                                    atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
+                                                    awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
+                                                    awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+                                                    hideEditButton: !hasAttendance, // Set hideEditButton to true if no attendance exists
+                                                    editMode: hasAttendance,
+                                                };
+                                            });
+                                            console.log('no attendance - '+this.registrationRecordsWithAttendance);
+                                    }
+                                    else
+                                    {
+                                            reg.hideEditButton=false;
+                                            reg.editMode=true;
+                                            const attendanceMap = new Map();
+                                            attendanceResult.forEach(att => {
+                                                attendanceMap.set(att.Registration__c, att);
+                                            });
+                                            this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
+                                                const attendanceRecord = attendanceMap.get(reg.Id);
+                                                 const hasAttendance = !!attendanceRecord;
+                                                return {
+                                                    ...reg,
+                                                    atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
+                                                    atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
+                                                    awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
+                                                    awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null,
+                                                    hideEditButton: !hasAttendance, // Set hideEditButton to true if no attendance exists
+                                                    editMode: hasAttendance,
+                                                };
+                                            });
 
-                // Create a new list to hold registration records with attendance data
-                this.registrationRecordsWithAttendance = this.registrationRecords.map(reg => {
-                    const attendanceRecord = attendanceMap.get(reg.Id);
-                    return {
-                        ...reg,
-                        atPartA: attendanceRecord ? (attendanceRecord.AttendedPartA__c || 'Yes') : 'Yes',
-                        atPartB: attendanceRecord ? (attendanceRecord.AttendedPartB__c || 'Yes') : 'Yes',
-                        awPartA: attendanceRecord ? attendanceRecord.AwardPartA__c : null,
-                        awPartB: attendanceRecord ? attendanceRecord.AwardPartB__c : null
-                    };
-                });*/
+                                    }
+                                    console.log('registration.isdisabledattendance attendanceRecordese- '+reg.editMode);
+                                    return reg;
+                                });
+                                             console.log('else attendance - '+this.registrationRecordsWithAttendance);
+                            }
+                            console.log('registrationRecordsWithAttendance 239 - ' +JSON.stringify(this.registrationRecordsWithAttendance));
+                            
+                                    console.log('after reg- '+JSON.stringify(this.registrationRecordsWithAttendance));
+                            
+                            });
+                                    
+                                    
+						}
+                    })        
+					
+                }
+            });
                 
-                console.log('registrationRecordsWithAttendance 274 - ' +JSON.stringify(this.registrationRecordsWithAttendance));
-                // Update the registrationRecords list with the new list containing attendance data
-                //this.registrationRecords = this.registrationRecordsWithAttendance;
-                console.log('reg last '+JSON.stringify(this.registrationRecords));
-            })
-        })
-       .catch(error => {
-            // Handle error
         });
-             console.log('registrationRecords atte'  +JSON.stringify(this.registrationRecords));
-        
     }
     
     handleEditRow(event){
@@ -351,14 +432,30 @@ export default class attendanceTakingScreen extends LightningElement {
         const updatedValue = event.target.value; // Get the updated value
         const registrationId = event.target.name; // Get the registration record ID
         const contactName = event.target.dataset.contactname; // Get the contact name
-        const val = JSON.stringify(event.detail);
+        //const val = JSON.stringify(event.detail);
         const sessionId = this.sessionId;
         const sessionName = this.sessionName;
         const prgmID = this.recordId;
-        const  updatedAwardValue= JSON.parse(val);
+        console.log('val -'+JSON.stringify(event.detail));
+         var updatedAwardValueA='';
+         var updatedAwardValueB ='';
+        //const  updatedAwardValue= JSON.parse(val);
+
         const dataId = event.target.getAttribute('data-id'); // Get the data ID (attendedPartA or attendedPartB)
+       if (dataId === 'awardPartA') {
+                const valA = JSON.stringify(event.detail);
+                  updatedAwardValueA= JSON.parse(valA);
+                console.log('dataId- ' +dataId);
+                console.log('updatedAwardValueA- ' +updatedAwardValueA.id);
+                //existingEntry.awardPartA = updatedAwardValue.id;
+            } else if (dataId === 'awardPartB') {
+                const valB = JSON.stringify(event.detail);
+                  updatedAwardValueB= JSON.parse(valB);
+                console.log('updatedAwardValueB- ' +updatedAwardValueB.id);
+               // existingEntry.awardPartB = updatedAwardValueB.id;
+            }
         console.log('event.detail - '+JSON.stringify(event.detail));
-        console.log('award - ' +updatedAwardValue.id);
+        //console.log('award - ' +updatedAwardValue.id);
         console.log('prgmID - ' +prgmID);
         console.log('contactName - ' +contactName);
         console.log('sessionName  - ' +sessionName +' - '+sessionId);
@@ -367,7 +464,7 @@ export default class attendanceTakingScreen extends LightningElement {
 
         // If no existing entry is found, create a new entry
         if (!existingEntry) {
-            this.createNewEntry(registrationId, contactName, dataId, updatedValue, updatedAwardValue,sessionId, sessionName,prgmID);
+            this.createNewEntry(registrationId, contactName, dataId, updatedValue, updatedAwardValueA,updatedAwardValueB,sessionId, sessionName,prgmID);
         } else {
             // Update the corresponding value based on the data ID
             if (dataId === 'attendedPartA') {
@@ -375,17 +472,21 @@ export default class attendanceTakingScreen extends LightningElement {
             } else if (dataId === 'attendedPartB') {
                 existingEntry.attendedPartB = updatedValue;
             } else if (dataId === 'awardPartA') {
+                const valA = JSON.stringify(event.detail);
+                  const updatedAwardValueA= JSON.parse(valA);
                 console.log('dataId- ' +dataId);
-                console.log('updatedAwardValue- ' +updatedAwardValue.id);
-                existingEntry.awardPartA = updatedAwardValue.id;
+                console.log('updatedAwardValueA- ' +updatedAwardValueA.id);
+               existingEntry.awardPartA = updatedAwardValueA.id;
             } else if (dataId === 'awardPartB') {
-                existingEntry.awardPartB = updatedAwardValue.id;
+                const valB = JSON.stringify(event.detail);
+                const updatedAwardValueB= JSON.parse(valB);
+               existingEntry.awardPartB = updatedAwardValueB.id;
             }
         }
-        console.log('existingEntry - ' +this.updatedValues);
+        console.log('existingEntry - ' +JSON.stringify(this.updatedValues));
     }
     
-    createNewEntry(registrationId, contactName, dataId, updatedValue, updatedAwardValue, sessionId, sessionName, prgmID) {
+    createNewEntry(registrationId, contactName, dataId, updatedValue,updatedAwardValueA,updatedAwardValueB, sessionId, sessionName, prgmID) {
         const newEntry = {
             registrationId: registrationId,
             contactName: contactName,
@@ -404,14 +505,16 @@ export default class attendanceTakingScreen extends LightningElement {
         } else if (dataId === 'attendedPartB') {
             newEntry.attendedPartB = updatedValue;
         } else if (dataId === 'awardPartA') {
-            newEntry.awardPartA = updatedAwardValue.id;
+            newEntry.awardPartA = updatedAwardValueA.id;
         } else if (dataId === 'awardPartB') {
-            newEntry.awardPartB = updatedAwardValue.id;
+            newEntry.awardPartB =updatedAwardValueB.id;
         }
     
         this.updatedValues.push(newEntry);
+        console.log('nww - '+JSON.stringify( this.updatedValues));
     }
     handleClickSave(){
+        this.saveDisabled = true;
         const sessionId = this.sessionId;
         const sessName = this.sessionName;
         const prgmID = this.recordId;
@@ -440,13 +543,18 @@ export default class attendanceTakingScreen extends LightningElement {
                       }, 5000);
                       this.dispatchEvent(new CloseActionScreenEvent());*/
                       window.alert(' Successfully added Attendance.');
-                      this.dispatchEvent(new CloseActionScreenEvent());
-                     // window.location.href = 'https://dalecarnegie--cbdev.sandbox.lightning.force.com/lightning/r/Program__c/'+this.recordId+'/view';
+                      //this.handlePageRefresh();
+                      const timeout = setTimeout(()=>{
+                        window.close()  
+                        },1000);
+                    //window.open('https://dalecarnegie--cbdev.sandbox.lightning.force.com/lightning/r/Program__c/'+this.recordId+'/view');
+        
+                     window.location.href = this.redirectURL+this.recordId+'/view';
                     //this.navigateToRecord(result.id);    
         
                                 })
                 .catch(error => {
-        console.log('error - '+error)
+        console.log('error - '+JSON.stringify(error));
             });
 
 
@@ -454,6 +562,14 @@ export default class attendanceTakingScreen extends LightningElement {
      
     handleClickCancel(){
         this.dispatchEvent(new CloseActionScreenEvent());
+       // location.reload();
+    }
+    handlePageRefresh(){
+        //window.location.reload();
+        //alert('save');
+        this.dispatchEvent(new RefreshEvent());
+      
+        this.handleClickCancel();
     }
 	displayError(error) {
 		this.error = 'Unknown error';
